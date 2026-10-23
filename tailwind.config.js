@@ -7,33 +7,27 @@ export default {
   theme: {
     extend: {
       colors: {
-        ocean: {
-          50: '#f0fdfa',
-          100: '#ccfbf1',
-          200: '#99f6e4',
-          300: '#5eead4',
-          400: '#2dd4bf',
-          500: '#14b8a6',
-          600: '#0d9488',
-          700: '#0f766e',
-          800: '#115e59',
-          900: '#134e4a',
-          950: '#042f2e',
-        },
-        navy: {
-          800: '#0f172a',
-          900: '#0a1120',
-          950: '#060a12',
-        }
+        'surface-sky': '#0B2545',
+        'surface-water': '#134074',
+        'mid-depth': '#0A1128',
+        'oceanic-deep': '#001F3F',
+        'abyssal-trench': '#03071E',
+        'abyssal-dark': '#050A14',
+        'cyan-glow': '#00E5FF',
+        'teal-mint': '#00C9A7',
+        'warning-amber': '#FFB703',
+        'muted-slate': '#8D99AE',
+        'soft-slate': '#E0E1DD',
+        'pure-white': '#FFFFFF',
       },
       fontFamily: {
         sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'glow-teal': '0 0 25px -5px rgba(20, 184, 166, 0.4)',
-        'glow-cyan': '0 0 25px -5px rgba(6, 182, 212, 0.4)',
-        'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.4)',
-        'glow-rose': '0 0 25px -5px rgba(244, 63, 94, 0.4)',
+        'cyan-glow': '0 0 25px -4px rgba(0, 229, 255, 0.45)',
+        'cyan-button': '0 4px 20px -2px rgba(0, 229, 255, 0.5)',
+        'teal-glow': '0 0 25px -4px rgba(0, 201, 167, 0.4)',
+        'amber-glow': '0 0 25px -4px rgba(255, 183, 3, 0.4)',
       }
     },
   },

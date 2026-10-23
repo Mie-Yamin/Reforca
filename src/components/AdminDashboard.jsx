@@ -178,7 +178,7 @@ export default function AdminDashboard({ reports, onUpdateReport }) {
           <div>
             <div className="flex items-center gap-2">
               <Sparkles size={18} className="text-teal-400" />
-              <h4 className="text-lg font-bold text-white">AI Priority Matrix — Antrean Intervensi Pesisir</h4>
+              <h4 className="text-lg font-bold text-white">AI Priority Matrix: Antrean Intervensi Pesisir</h4>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
               Urutan kalkulasi otomatis algoritma: <code className="text-teal-300 font-mono text-[11px]">(Tingkat Keparahan Llama-3 × Bobot) + (Dukungan Upvote × 1.5) + (Volume m² × 0.2)</code>

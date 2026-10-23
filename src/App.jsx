@@ -1,61 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import AOS from 'aos';
+import 'aos/dist/aos.css';
 import { 
-  Waves, 
-  MapPin, 
-  FileText, 
-  DollarSign, 
-  Sparkles, 
-  ShieldCheck, 
   ArrowUp,
   CheckCircle,
-  AlertCircle
+  Building2,
+  X
 } from 'lucide-react';
 
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
-import BeachMap from './components/BeachMap';
-import PublicReportForm from './components/PublicReportForm';
-import PublicFeed from './components/PublicFeed';
-import TransparencyHub from './components/TransparencyHub';
-import AdminDashboard from './components/AdminDashboard';
+import ImpactStatsBar from './components/ImpactStatsBar';
+import FeaturesSection from './components/FeaturesSection';
+import CitizenReportsSection from './components/CitizenReportsSection';
+import FAQSection from './components/FAQSection';
+import ContactSection from './components/ContactSection';
 import Footer from './components/Footer';
+import CreateReportModal from './components/CreateReportModal';
+import AdminDashboard from './components/AdminDashboard';
 
 import { INITIAL_REPORTS } from './data/mockFirestore';
 
 export default function App() {
   const [reports, setReports] = useState(() => {
-    const saved = localStorage.getItem('reforca_reports_v1');
+    const saved = localStorage.getItem('reforca_reports_v2');
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {
+      } catch {
         return INITIAL_REPORTS;
       }
     }
     return INITIAL_REPORTS;
   });
 
-  // Router: support window.location.pathname or SPA internal state
+  // Current route: '/' for Full Landing Page, '/admin' for Ruang Komando Instansi
   const [currentRoute, setCurrentRoute] = useState(() => {
     return window.location.pathname === '/admin' ? '/admin' : '/';
   });
 
-  const [activeReportId, setActiveReportId] = useState(null);
   const [toast, setToast] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
-  // Initialize AOS (Animate On Scroll)
+  // Initialize AOS animation library
   useEffect(() => {
     AOS.init({
-      duration: 800,
+      duration: 550,
       easing: 'ease-out-cubic',
       once: true,
-      offset: 40,
+      offset: 30,
     });
   }, []);
 
-  // Listen to browser popstate (Back/Forward navigation)
+  // Sync route on browser navigation popstate
   useEffect(() => {
     const handlePopState = () => {
       setCurrentRoute(window.location.pathname === '/admin' ? '/admin' : '/');
@@ -64,7 +62,7 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Scroll to top button visibility
+  // Show/Hide Floating Scroll To Top button
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 400);
@@ -73,12 +71,11 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Persist to localStorage to simulate Firestore BaaS persistence
+  // Persist reports to localStorage
   useEffect(() => {
-    localStorage.setItem('reforca_reports_v1', JSON.stringify(reports));
+    localStorage.setItem('reforca_reports_v2', JSON.stringify(reports));
   }, [reports]);
 
-  // Toast Helper
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => {
@@ -86,7 +83,6 @@ export default function App() {
     }, 4000);
   };
 
-  // Navigation Handler
   const handleNavigate = (route) => {
     setCurrentRoute(route);
     window.history.pushState({}, '', route);
@@ -96,14 +92,10 @@ export default function App() {
     }, 150);
   };
 
-  // Add Report Handler (Citizen Reporting)
+  // Add Citizen Report Handler
   const handleAddReport = (newReport) => {
     setReports((prev) => [newReport, ...prev]);
-    showToast(`Laporan titik "${newReport.locationName}" berhasil diterbitkan ke koleksi Firestore!`, 'success');
-    setActiveReportId(newReport.id);
-    setTimeout(() => {
-      AOS.refresh();
-    }, 200);
+    showToast(`Laporan "${newReport.locationName}" berhasil diterbitkan ke sistem Reforca.`, 'success');
   };
 
   // Upvote Handler
@@ -119,180 +111,176 @@ export default function App() {
     );
 
     if (isIncrement) {
-      showToast('Dukungan suara warga berhasil dicatat! Skor AI Priority Matrix diperbarui.', 'success');
+      showToast('Dukungan suara berhasil dicatat untuk prioritas penanganan.', 'success');
     }
   };
 
-  // Citizen Verification Handler
-  const handleCitizenVerify = (reportId) => {
-    setReports((prev) =>
-      prev.map((r) => {
-        if (r.id === reportId) {
-          return { ...r, citizenConfirmed: true, updatedAt: new Date().toISOString() };
-        }
-        return r;
-      })
-    );
-    showToast('Terima kasih! Verifikasi kebersihan pantai dari warga telah disematkan secara permanen.', 'success');
-  };
-
-  // Admin Update Report Handler
+  // Update Report (from Admin command center)
   const handleUpdateReport = (updatedDoc) => {
     setReports((prev) =>
       prev.map((r) => (r.id === updatedDoc.id ? updatedDoc : r))
     );
-    showToast(`Status & transparansi anggaran untuk "${updatedDoc.locationName}" berhasil diperbarui.`, 'success');
+    showToast(`Status penanganan untuk "${updatedDoc.locationName}" berhasil diperbarui.`, 'success');
   };
 
-  const handleSelectReport = (report) => {
-    setActiveReportId(report.id);
-    const feedElement = document.getElementById('feed-section');
-    if (feedElement) {
-      feedElement.scrollIntoView({ behavior: 'smooth' });
+  const scrollToReportsSection = () => {
+    const el = document.getElementById('laporan-warga');
+    if (el) {
+      const navOffset = 90;
+      const elementPosition = el.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - navOffset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
     }
   };
 
-  const totalVotesCount = reports.reduce((acc, r) => acc + (r.votesCount || 0), 0);
-
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-teal-500 selection:text-slate-950">
+    <div className="min-h-screen flex flex-col bg-white text-[#0F172A] font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
       
-      {/* Toast Notification Banner */}
+      {/* Toast Notification */}
       {toast && (
         <div className="fixed top-24 right-4 z-[9999] max-w-md animate-fade-in pointer-events-none">
-          <div className="pointer-events-auto p-4 rounded-2xl bg-slate-900/95 backdrop-blur-xl border border-teal-500/40 text-xs shadow-2xl flex items-center gap-3 text-white">
-            <div className="p-2 rounded-xl bg-teal-500/20 text-teal-300">
+          <div className="pointer-events-auto p-4 rounded-2xl bg-white border border-[#E2E8F0] text-xs shadow-xl flex items-center gap-3 text-[#0F172A]">
+            <div className="p-2 rounded-xl bg-[#DCFCE7] text-[#16A34A]">
               <CheckCircle size={18} />
             </div>
-            <p className="flex-1 leading-snug">{toast.message}</p>
+            <p className="flex-1 leading-snug font-medium text-[#334155]">{toast.message}</p>
             <button 
+              type="button"
               onClick={() => setToast(null)}
-              className="text-slate-400 hover:text-white font-bold p-1"
+              className="text-slate-400 hover:text-slate-700 font-bold p-1"
+              aria-label="Tutup notifikasi"
             >
-              ✕
+              <X size={16} />
             </button>
           </div>
         </div>
       )}
 
-      {/* Main Top Header Navbar */}
-      <Navbar currentRoute={currentRoute} onNavigate={handleNavigate} />
+      {/* ========================================================= */}
+      {/* 1. STICKY HEADER NAVBAR (Capsule Mengambang Putih)       */}
+      {/* ========================================================= */}
+      <Navbar 
+        onOpenReportModal={() => setIsReportModalOpen(true)}
+      />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-16">
-        
-        {/* ========================================================= */}
-        {/* SISI 1: MASYARAKAT / USER (PUBLIC PORTAL - ROUTE '/')     */}
-        {/* ========================================================= */}
-        {currentRoute === '/' ? (
-          <>
-            {/* Hero Section */}
-            <div id="beranda">
-              <HeroSection 
-                totalReports={reports.length}
-                totalVotes={totalVotesCount}
-                onOpenReportForm={() => {
-                  const el = document.getElementById('formulir-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-                onExploreMap={() => {
-                  const el = document.getElementById('peta-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-              />
-            </div>
+      {/* Conditional View: Landing Page (Default) vs Admin Command Center */}
+      {currentRoute === '/' ? (
+        <main className="flex-1 w-full flex flex-col">
+          
+          {/* ========================================================= */}
+          {/* 2. HERO SECTION (Tebing Pesisir Nyata + Dark Floating Card)*/}
+          {/* ========================================================= */}
+          <HeroSection 
+            onOpenReportModal={() => setIsReportModalOpen(true)}
+            onScrollToReports={scrollToReportsSection}
+          />
 
-            {/* Peta Interaktif Leaflet Section */}
-            <section id="peta-section" className="space-y-4" data-aos="fade-up">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-400 uppercase tracking-wider mb-1">
-                    <MapPin size={14} />
-                    <span>Pemetaan Geospasial Real-time</span>
-                  </div>
-                  <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                    Peta Sebaran Titik Kritis Pencemaran Pesisir
-                  </h2>
-                </div>
-                <p className="text-xs text-slate-400 max-w-md sm:text-right">
-                  Marker diwarnai sesuai tingkat urgensi AI. Klik pin untuk memeriksa rincian polutan dan melompat ke laporan warga.
-                </p>
-              </div>
+          {/* ========================================================= */}
+          {/* 3. IMPACT STATS BAR (Clean Style White Banner)           */}
+          {/* ========================================================= */}
+          <ImpactStatsBar />
 
-              {/* Map Container */}
-              <BeachMap 
-                reports={reports} 
-                onSelectReport={handleSelectReport}
-                activeReportId={activeReportId}
-              />
-            </section>
+          {/* ========================================================= */}
+          {/* 4. SECTION PENGENALAN FITUR (Fitur Utama Reforca)        */}
+          {/* ========================================================= */}
+          <FeaturesSection />
 
-            {/* Feed Laporan Publik & Dukungan Voting */}
-            <section id="feed-section" className="space-y-6" data-aos="fade-up">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-1">
-                    <FileText size={14} />
-                    <span>Feed Laporan Transparan Warga</span>
-                  </div>
-                  <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                    Suara Masyarakat & Progres Pembersihan
-                  </h2>
-                </div>
-                <p className="text-xs text-slate-400 max-w-md sm:text-right">
-                  Berikan dukungan upvote pada laporan yang mendesak untuk menaikkan peringkatnya pada AI Priority Matrix instansi.
-                </p>
-              </div>
+          {/* ========================================================= */}
+          {/* 5. SECTION LAPORAN WARGA (News/Article Card Grid Layout) */}
+          {/* ========================================================= */}
+          <CitizenReportsSection 
+            reports={reports}
+            onUpvote={handleUpvote}
+          />
 
-              <PublicFeed 
-                reports={reports}
-                onUpvote={handleUpvote}
-                onCitizenVerify={handleCitizenVerify}
-                onFocusMap={(reportId) => {
-                  setActiveReportId(reportId);
-                  const el = document.getElementById('peta-section');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }}
-              />
-            </section>
+          {/* ========================================================= */}
+          {/* 6. SECTION FAQ (Frequently Asked Questions)              */}
+          {/* ========================================================= */}
+          <FAQSection />
 
-            {/* Form Pelaporan Mandiri dengan Groq AI Analyzer */}
-            <section id="formulir-section" className="space-y-4" data-aos="fade-up">
-              <PublicReportForm onSubmitReport={handleAddReport} />
-            </section>
+          {/* ========================================================= */}
+          {/* 7. SECTION KONTAK & BANNER PENUTUP                       */}
+          {/* ========================================================= */}
+          <ContactSection 
+            onOpenReportModal={() => setIsReportModalOpen(true)}
+          />
 
-            {/* Hub Transparansi Biaya & Rekanan Vendor */}
-            <section id="transparansi-section" className="space-y-4" data-aos="fade-up">
-              <TransparencyHub reports={reports} />
-            </section>
-          </>
-        ) : (
-          /* ========================================================= */
-          /* SISI 2: ADMIN / INSTANSI PEMERINTAH (ROUTE '/admin')       */
-          /* ========================================================= */
-          <div id="admin-view" className="space-y-8 animate-fade-in">
-            <AdminDashboard 
-              reports={reports}
-              onUpdateReport={handleUpdateReport}
-            />
+          {/* Floating Admin Portal Switcher */}
+          <div className="fixed bottom-6 left-6 z-[450] hidden sm:block">
+            <button
+              type="button"
+              onClick={() => handleNavigate('/admin')}
+              className="px-3.5 py-2 rounded-xl bg-white hover:bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] text-xs font-bold shadow-md flex items-center gap-2 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+              title="Buka Ruang Komando Instansi Pemerintah"
+            >
+              <Building2 size={14} className="text-[#1D4ED8]" />
+              <span>Ruang Komando Instansi (/admin)</span>
+            </button>
           </div>
-        )}
 
-      </main>
+        </main>
+      ) : (
+        /* Admin Command Center Route */
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-[#E2E8F0]">
+            <div>
+              <span className="text-xs font-bold text-[#1D4ED8] uppercase tracking-wider">
+                Portal Internal Kedinasan
+              </span>
+              <h1 className="text-2xl font-black text-[#0F172A]">
+                Ruang Komando Instansi: Dinas Lingkungan Hidup
+              </h1>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleNavigate('/')}
+              className="px-4 py-2 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-bold transition-all shadow-xs"
+            >
+              &larr; Kembali ke Landing Page Warga
+            </button>
+          </div>
+
+          <AdminDashboard 
+            reports={reports}
+            onUpdateReport={handleUpdateReport}
+          />
+        </main>
+      )}
 
       {/* Floating Scroll To Top Button */}
       {showScrollTop && (
         <button
+          type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-6 right-6 z-[450] p-3 rounded-2xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black shadow-xl shadow-teal-500/30 transition-all hover:scale-110 active:scale-95"
+          className="fixed bottom-6 right-6 z-[450] p-3 rounded-full bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold shadow-lg transition-all hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
           title="Kembali ke atas"
+          aria-label="Kembali ke atas halaman"
         >
-          <ArrowUp size={20} />
+          <ArrowUp size={18} />
         </button>
       )}
 
-      {/* Footer */}
-      <Footer onNavigate={handleNavigate} />
+      {/* ========================================================= */}
+      {/* 8. FOOTER BERSIH LATAR PUTIH / GRAY                      */}
+      {/* ========================================================= */}
+      <Footer onNavigateToAdmin={() => handleNavigate('/admin')} />
+
+      {/* Modal Buat Laporan & Masuk Akun */}
+      <CreateReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onSubmitReport={handleAddReport}
+        onLoginSuccess={(role) => {
+          if (role === 'admin') {
+            handleNavigate('/admin');
+          } else {
+            showToast('Selamat datang kembali di Reforca!', 'success');
+          }
+        }}
+      />
 
     </div>
   );

@@ -1,178 +1,159 @@
-import React, { useState } from 'react';
-import { 
-  Waves, 
-  MapPin, 
-  FileText, 
-  PlusCircle, 
-  ShieldAlert, 
-  DollarSign, 
-  Menu, 
-  X, 
-  Users, 
-  Building2,
-  Sparkles,
-  ExternalLink
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, X, PlusCircle } from 'lucide-react';
+import OrcaLogo from './OrcaLogo';
 
-export default function Navbar({ currentRoute, onNavigate }) {
+export default function Navbar({ onOpenReportModal }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  const handleNavClick = (route, targetId = null) => {
-    onNavigate(route);
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const scrollToSection = (sectionId) => {
     setIsMobileMenuOpen(false);
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const navOffset = 90;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - navOffset;
 
-    if (targetId && route === '/') {
-      setTimeout(() => {
-        const el = document.getElementById(targetId);
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
     }
   };
 
-  return (
-    <header className="sticky top-0 z-[500] w-full bg-slate-950/85 backdrop-blur-xl border-b border-teal-500/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          
-          {/* Logo & Platform Name */}
-          <div 
-            onClick={() => handleNavClick('/')}
-            className="flex items-center gap-3 cursor-pointer group"
-          >
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-teal-400 via-cyan-500 to-emerald-500 flex items-center justify-center text-slate-950 shadow-glow-teal transition-transform group-hover:scale-105">
-              <Waves size={24} className="animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-extrabold tracking-tight text-white font-sans">
-                  Reforca
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/40 uppercase tracking-widest hidden sm:inline-block">
-                  MIA CIVIC
-                </span>
-              </div>
-              <p className="text-[11px] text-cyan-300/80 font-medium">Report For Care — Lingkungan Pesisir</p>
-            </div>
-          </div>
+  const navLinks = [
+    { id: 'beranda', label: 'HOME' },
+    { id: 'fitur', label: 'FITUR' },
+    { id: 'laporan-warga', label: 'LAPORAN WARGA' },
+    { id: 'faq', label: 'FAQ' },
+    { id: 'kontak', label: 'KONTAK' },
+  ];
 
-          {/* Center Navigation Links (Public Portal) */}
-          {currentRoute === '/' && (
-            <nav className="hidden lg:flex items-center gap-1 bg-slate-900/60 p-1.5 rounded-2xl border border-slate-800">
-              <button 
-                onClick={() => handleNavClick('/', 'peta-section')}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-cyan-300 hover:bg-slate-800/80 transition-all flex items-center gap-1.5"
+  return (
+    <header className="sticky top-0 z-50 w-full pt-3 sm:pt-4 px-4 sm:px-6 lg:px-8 transition-all duration-300 pointer-events-none">
+      <div className="max-w-6xl mx-auto pointer-events-auto">
+        {/* Floating White Capsule Navbar */}
+        <div 
+          className={`w-full rounded-full bg-white/95 backdrop-blur-md border border-[#E2E8F0] px-4 sm:px-6 py-2.5 sm:py-3 transition-all duration-300 ${
+            isScrolled 
+              ? 'shadow-lg shadow-slate-900/10' 
+              : 'shadow-md shadow-slate-900/5'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            
+            {/* Logo Orca Reforca di sebelah kiri */}
+            <button 
+              type="button"
+              onClick={() => scrollToSection('beranda')}
+              className="flex items-center gap-2.5 group text-left focus:outline-none focus:ring-2 focus:ring-[#1D4ED8] rounded-full p-1"
+              aria-label="Reforca Beranda"
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#EFF6FF] border border-[#DBEAFE] flex items-center justify-center shadow-xs transition-transform group-hover:scale-105">
+                <OrcaLogo className="w-7 h-7 sm:w-8 sm:h-8" />
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-lg sm:text-xl font-extrabold tracking-tight text-[#0F172A] font-sans">
+                    Reforca
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#1D4ED8] border border-[#DBEAFE] uppercase tracking-wider hidden sm:inline-block">
+                    Report For Care
+                  </span>
+                </div>
+              </div>
+            </button>
+
+            {/* Menu Navigasi Tengah / Kanan (HOME, FITUR, LAPORAN WARGA, FAQ, KONTAK) */}
+            <nav className="hidden md:flex items-center gap-1 lg:gap-2" aria-label="Navigasi Utama">
+              {navLinks.map((link) => (
+                <button
+                  key={link.id}
+                  type="button"
+                  onClick={() => scrollToSection(link.id)}
+                  className="px-3.5 py-2 rounded-full text-xs font-bold text-[#0F172A] hover:text-[#1D4ED8] hover:bg-[#F8FAFC] transition-colors focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+                >
+                  {link.label}
+                </button>
+              ))}
+            </nav>
+
+            {/* Tombol Buat Laporan Matte Primary Blue */}
+            <div className="hidden sm:flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onOpenReportModal}
+                className="px-5 py-2 rounded-full bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-xs sm:text-sm shadow-sm transition-all hover:shadow hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8] focus:ring-offset-2 flex items-center gap-1.5"
               >
-                <MapPin size={13} className="text-teal-400" />
-                <span>Peta Interaktif</span>
-              </button>
-              <button 
-                onClick={() => handleNavClick('/', 'feed-section')}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-cyan-300 hover:bg-slate-800/80 transition-all flex items-center gap-1.5"
-              >
-                <FileText size={13} className="text-cyan-400" />
-                <span>Laporan Warga</span>
-              </button>
-              <button 
-                onClick={() => handleNavClick('/', 'formulir-section')}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-cyan-300 hover:bg-slate-800/80 transition-all flex items-center gap-1.5"
-              >
-                <PlusCircle size={13} className="text-emerald-400" />
+                <PlusCircle size={15} />
                 <span>Buat Laporan</span>
               </button>
-              <button 
-                onClick={() => handleNavClick('/', 'transparansi-section')}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-cyan-300 hover:bg-slate-800/80 transition-all flex items-center gap-1.5"
-              >
-                <DollarSign size={13} className="text-teal-300" />
-                <span>Hub Transparansi</span>
-              </button>
-            </nav>
-          )}
+            </div>
 
-          {/* Two-Sided Portal Switcher (Special Route Toggle) */}
-          <div className="flex items-center gap-3">
-            <div className="bg-slate-900 p-1 rounded-2xl border border-slate-700/80 flex items-center gap-1 shadow-inner">
+            {/* Tombol Hamburger Mobile */}
+            <div className="flex md:hidden items-center gap-2">
               <button
-                onClick={() => handleNavClick('/')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
-                  currentRoute === '/'
-                    ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-slate-950 shadow-md'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
+                type="button"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 rounded-full bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] hover:text-[#1D4ED8] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+                aria-label={isMobileMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"}
+                aria-expanded={isMobileMenuOpen}
               >
-                <Users size={14} />
-                <span className="hidden sm:inline">Masyarakat (Warga)</span>
-                <span className="sm:hidden">Warga</span>
-              </button>
-
-              <button
-                onClick={() => handleNavClick('/admin')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
-                  currentRoute === '/admin'
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 shadow-md'
-                    : 'text-slate-400 hover:text-cyan-300'
-                }`}
-              >
-                <Building2 size={14} />
-                <span className="hidden sm:inline">Admin Instansi (`/admin`)</span>
-                <span className="sm:hidden">Admin</span>
+                {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
             </div>
 
-            {/* Mobile Menu Toggle */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white"
-            >
-              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
           </div>
-
         </div>
+
+        {/* Mobile Drawer Menu (Clean White Pill Card) */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden mt-2 rounded-2xl border border-[#E2E8F0] bg-white/95 backdrop-blur-xl p-4 shadow-xl space-y-2 animate-fade-in">
+            {navLinks.map((link) => (
+              <button
+                key={link.id}
+                type="button"
+                onClick={() => scrollToSection(link.id)}
+                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-[#0F172A] hover:text-[#1D4ED8] hover:bg-[#F8FAFC] transition-colors"
+              >
+                {link.label}
+              </button>
+            ))}
+            <div className="pt-2 border-t border-[#E2E8F0]">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  if (onOpenReportModal) onOpenReportModal();
+                }}
+                className="w-full py-2.5 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2"
+              >
+                <PlusCircle size={16} />
+                <span>Buat Laporan</span>
+              </button>
+            </div>
+          </div>
+        )}
+
       </div>
-
-      {/* Mobile Drawer */}
-      {isMobileMenuOpen && (
-        <div className="lg:hidden bg-slate-950/95 border-b border-teal-500/20 px-4 pt-3 pb-6 space-y-2 backdrop-blur-2xl">
-          <button
-            onClick={() => handleNavClick('/', 'peta-section')}
-            className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-slate-900 flex items-center gap-2"
-          >
-            <MapPin size={16} className="text-teal-400" />
-            <span>Peta Interaktif Sebaran Pantai</span>
-          </button>
-          <button
-            onClick={() => handleNavClick('/', 'feed-section')}
-            className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-slate-900 flex items-center gap-2"
-          >
-            <FileText size={16} className="text-cyan-400" />
-            <span>Feed Laporan & Voting Warga</span>
-          </button>
-          <button
-            onClick={() => handleNavClick('/', 'formulir-section')}
-            className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-slate-900 flex items-center gap-2"
-          >
-            <PlusCircle size={16} className="text-emerald-400" />
-            <span>Form Pelaporan + Groq AI Analyzer</span>
-          </button>
-          <button
-            onClick={() => handleNavClick('/', 'transparansi-section')}
-            className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-200 hover:bg-slate-900 flex items-center gap-2"
-          >
-            <DollarSign size={16} className="text-teal-300" />
-            <span>Hub Transparansi Anggaran & Rekanan</span>
-          </button>
-          <div className="pt-2 border-t border-slate-800">
-            <button
-              onClick={() => handleNavClick('/admin')}
-              className="w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 flex items-center gap-2"
-            >
-              <ShieldAlert size={16} />
-              <span>Buka Ruang Komando Instansi / Admin</span>
-            </button>
-          </div>
-        </div>
-      )}
     </header>
   );
 }

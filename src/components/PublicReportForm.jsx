@@ -8,13 +8,10 @@ import {
   Phone, 
   Cpu, 
   CheckCircle2, 
-  AlertCircle, 
-  Trash2, 
   Image as ImageIcon,
   Activity,
-  Layers,
-  ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  AlertTriangle
 } from 'lucide-react';
 
 const PRESET_BEACHES = [
@@ -23,111 +20,82 @@ const PRESET_BEACHES = [
   { name: "Pantai Karnaval & Kawasan Tanggul Marina Ancol", coords: [-6.1215, 106.8491] },
   { name: "Pantai Pasir Perawan (Pulau Pari, Kepulauan Seribu)", coords: [-5.8622, 106.6214] },
   { name: "Pantai Untung Jawa (Pesisir Dermaga Sakura)", coords: [-5.9782, 106.7041] },
-  { name: "Pesisir Tanjung Pasir (Muara Teluknaga)", coords: [-6.0152, 106.6789] },
-  { name: "Pantai Mutiara (Pesisir Pluit / Waduk Pluit)", coords: [-6.1136, 106.7915] }
+  { name: "Pesisir Tanjung Pasir (Muara Teluknaga)", coords: [-6.0152, 106.6789] }
 ];
 
-const PRESET_IMAGES = [
+const PRESET_THUMBNAILS = [
   {
-    label: "Sampah Plastik & Jaring Terjebak Mangrove",
+    title: "Mangrove Muara Angke",
     url: "https://images.unsplash.com/photo-1621451537084-482c73073a0f?auto=format&fit=crop&w=1000&q=80",
-    mockAi: {
-      severity: "Darurat",
-      wasteType: ["Plastik Sekali Pakai", "Jaring Nelayan (Ghost Nets)", "Styrofoam Pecahan", "Tali Tambang Plastik"],
-      estimatedVolumeM2: 290,
-      confidenceScore: 97.4,
-      aiSummary: "ANALISIS GROQ LLAMA-3: Terdeteksi kerapatan sampah anorganik tinggi (>40 kg/m²) yang mengikat pneumatofora (akar napas) mangrove. Urgensi DARURAT karena berisiko mematikan tegakan mangrove dalam 14 hari.",
-      recommendedActions: [
-        "Pengerahan tim evakuasi manual berpelampung",
-        "Pengangkutan tongkang limbah pesisir",
-        "Pemasangan jaring barrier terapung"
-      ]
-    }
+    severity: "Darurat",
+    accuracy: "97.4%",
+    area: "± 290 m²",
+    wasteTypes: ["Plastik Sekali Pakai", "Jaring Nelayan", "Styrofoam", "Tali Tambang"],
+    narrative: "ANALISIS AI VISION: Terdeteksi kerapatan sampah anorganik tinggi (>40 kg/m²) yang mengikat pneumatofora (akar napas) mangrove. Urgensi DARURAT karena berisiko mematikan tegakan mangrove dan mencemari tambak pesisir dalam 14 hari."
   },
   {
-    label: "Tumpukan Sampah Domestik Garis Pantai Pasang",
+    title: "Garis Pantai Marunda",
     url: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=1000&q=80",
-    mockAi: {
-      severity: "Tinggi",
-      wasteType: ["Kantong Kresek", "Limbah Kemasan Sachet", "Kemasan Minuman Kaca", "Tekstil Basah"],
-      estimatedVolumeM2: 185,
-      confidenceScore: 94.8,
-      aiSummary: "ANALISIS GROQ LLAMA-3: Penumpukan sampah kiriman arus pasang laut. Ditemukan serpihan kaca dan limbah mikro berpotensi mencemari pasang surut.",
-      recommendedActions: [
-        "Pembersihan menggunakan tim sapu pesisir",
-        "Penyortiran limbah pecahan kaca terpisah",
-        "Penyediaan drop box limbah di bibir pantai"
-      ]
-    }
+    severity: "Darurat",
+    accuracy: "96.2%",
+    area: "± 480 m²",
+    wasteTypes: ["Plastik Sekali Pakai", "Limbah Tekstil", "Botol Kaca", "Styrofoam"],
+    narrative: "ANALISIS AI VISION: Penumpukan sampah domestik pesisir terbawa arus rob laut. Ditemukan pecahan kaca dan serpihan styrofoam yang membahayakan aktivitas nelayan dan anak-anak pesisir."
   },
   {
-    label: "Serpihan Mikro & Makro Plastik Pesisir Wisata",
+    title: "Pesisir Pulau Pari",
     url: "https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=1000&q=80",
-    mockAi: {
-      severity: "Sedang",
-      wasteType: ["Sedotan Plastik", "Tutup Botol PET", "Serpihan Foam Putih"],
-      estimatedVolumeM2: 85,
-      confidenceScore: 92.1,
-      aiSummary: "ANALISIS GROQ LLAMA-3: Kepadatan polutan sedang, dominasi pecahan plastik berukuran 2-10 cm. Memerlukan alat ayakan pasir (beach sand-sifter).",
-      recommendedActions: [
-        "Pembersihan metode ayakan pasir manual",
-        "Pemasangan signage edukasi turis bahari"
-      ]
-    }
+    severity: "Sedang",
+    accuracy: "92.8%",
+    area: "± 110 m²",
+    wasteTypes: ["Plastik Sekali Pakai", "Sedotan Plastik", "Tutup Botol", "Serpihan Foam"],
+    narrative: "ANALISIS AI VISION: Polutan mikro dan makro plastik tersebar di bibir pantai wisata. Disarankan penanganan segera menggunakan ayakan pasir pantai untuk menghindari degradasi mikroplastik."
   }
 ];
 
 export default function PublicReportForm({ onSubmitReport }) {
   const [selectedBeach, setSelectedBeach] = useState(PRESET_BEACHES[0].name);
   const [customBeachName, setCustomBeachName] = useState('');
-  const [description, setDescription] = useState('');
-  const [reporterName, setReporterName] = useState('');
-  const [reporterContact, setReporterContact] = useState('');
-  const [photoUrl, setPhotoUrl] = useState(PRESET_IMAGES[0].url);
-  const [selectedPresetIndex, setSelectedPresetIndex] = useState(0);
-
-  // AI Inference State
+  const [description, setDescription] = useState(
+    "Timbunan jaring nelayan dan kantong plastik menumpuk tebal di sela-sela akar bakau setelah pasang air laut. Nelayan setempat kesulitan menambatkan perahu dan air mulai berbau busuk."
+  );
+  const [reporterName, setReporterName] = useState('Bambang Sudirman');
+  const [reporterContact, setReporterContact] = useState('0812-8871-3321');
+  
+  const [activeThumbnailIndex, setActiveThumbnailIndex] = useState(0);
+  const [currentPhotoUrl, setCurrentPhotoUrl] = useState(PRESET_THUMBNAILS[0].url);
+  
+  // AI Vision Analyzer states
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisProgress, setAnalysisProgress] = useState(0);
-  const [inferenceTokensPerSec, setInferenceTokensPerSec] = useState(0);
-  const [aiResult, setAiResult] = useState(PRESET_IMAGES[0].mockAi);
+  const [analysisProgress, setAnalysisProgress] = useState(100);
+  const [aiData, setAiData] = useState(PRESET_THUMBNAILS[0]);
   const [isSubmittedSuccess, setIsSubmittedSuccess] = useState(false);
 
-  // Handle Preset Image Change
-  const handleSelectPreset = (index) => {
-    setSelectedPresetIndex(index);
-    setPhotoUrl(PRESET_IMAGES[index].url);
-    setAiResult(null); // Reset AI to encourage running analyzer
+  const handleSelectThumbnail = (index) => {
+    setActiveThumbnailIndex(index);
+    setCurrentPhotoUrl(PRESET_THUMBNAILS[index].url);
+    setAiData(PRESET_THUMBNAILS[index]);
   };
 
-  // Simulate Groq Llama 3 Inference
   const handleRunAiAnalyzer = () => {
     setIsAnalyzing(true);
-    setAnalysisProgress(15);
-    setInferenceTokensPerSec(485);
+    setAnalysisProgress(20);
 
-    const stepInterval = setInterval(() => {
+    const interval = setInterval(() => {
       setAnalysisProgress((prev) => {
         if (prev >= 90) {
-          clearInterval(stepInterval);
+          clearInterval(interval);
           return 95;
         }
         return prev + 25;
       });
-      setInferenceTokensPerSec(Math.floor(480 + Math.random() * 80));
-    }, 180);
+    }, 200);
 
     setTimeout(() => {
-      clearInterval(stepInterval);
+      clearInterval(interval);
       setAnalysisProgress(100);
       setIsAnalyzing(false);
-
-      // Pick corresponding or dynamically generated AI result
-      const activePreset = PRESET_IMAGES[selectedPresetIndex] || PRESET_IMAGES[0];
-      setAiResult({
-        ...activePreset.mockAi,
-        aiSummary: `[GROQ LPU INFERENCE / LLAMA-3 VISION 70B]\n${activePreset.mockAi.aiSummary}\nLokasi terkonfirmasi di zona koordinat pesisir Teluk Jakarta.`
-      });
+      setAiData(PRESET_THUMBNAILS[activeThumbnailIndex]);
     }, 1200);
   };
 
@@ -135,7 +103,7 @@ export default function PublicReportForm({ onSubmitReport }) {
     e.preventDefault();
 
     if (!reporterName.trim() || !description.trim()) {
-      alert("Mohon lengkapi nama pelapor dan deskripsi temuan sampah pantai.");
+      alert("Mohon lengkapi nama pelapor dan deskripsi temuan sampah.");
       return;
     }
 
@@ -144,322 +112,292 @@ export default function PublicReportForm({ onSubmitReport }) {
       coords: [-6.10, 106.82]
     };
 
-    const finalReport = {
+    const newReport = {
       id: `reforca_doc_${Date.now()}`,
       locationName: customBeachName ? customBeachName : beachObj.name,
       coordinates: beachObj.coords,
       description: description,
-      photoBefore: photoUrl,
+      photoBefore: currentPhotoUrl,
       photoAfter: null,
       reporterName: reporterName,
-      reporterContact: reporterContact || "Tidak dicantumkan",
-      aiAnalysis: aiResult || {
-        severity: "Sedang",
-        wasteType: ["Plastik Campuran", "Sampah Pesisir"],
-        estimatedVolumeM2: 120,
-        confidenceScore: 88.0,
-        aiSummary: "Analisis otomatis default berdasarkan parameter foto.",
-        recommendedActions: ["Pembersihan manual tim kebersihan pesisir"]
+      reporterContact: reporterContact || "0812-xxxx-xxxx",
+      aiAnalysis: {
+        severity: aiData.severity,
+        wasteType: aiData.wasteTypes,
+        estimatedVolumeM2: parseInt(aiData.area.replace(/[^0-9]/g, ''), 10) || 290,
+        confidenceScore: parseFloat(aiData.accuracy.replace(/[^0-9.]/g, '')) || 97.4,
+        aiSummary: aiData.narrative,
+        recommendedActions: [
+          "Pengerahan perahu pembersih pesisir",
+          "Evakuasi limbah anorganik manual",
+          "Pemasangan jaring barrier penahan sampah"
+        ]
       },
       status: "Pending",
-      assignedVendor: "Menunggu Penugasan Dinas LH / Vendor",
+      assignedVendor: "Dinas Lingkungan Hidup DKI Jakarta",
       costDetails: {
         totalCost: 0,
         breakdown: []
       },
-      votesCount: 1, // Automatic first vote from reporter
+      votesCount: 1,
       citizenConfirmed: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
-    onSubmitReport(finalReport);
-    setIsSubmittedSuccess(true);
+    if (onSubmitReport) {
+      onSubmitReport(newReport);
+    }
 
-    // Reset Form
+    setIsSubmittedSuccess(true);
     setTimeout(() => {
       setIsSubmittedSuccess(false);
-      setDescription('');
-      setCustomBeachName('');
-    }, 3500);
+    }, 4500);
   };
 
   return (
-    <div className="relative glass-panel rounded-3xl p-6 sm:p-8 border border-teal-500/25 shadow-2xl overflow-hidden" data-aos="fade-up">
-      {/* Decorative gradient blur */}
-      <div className="absolute -top-24 -right-24 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-800">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-xs font-semibold mb-2">
-            <Sparkles size={14} className="text-teal-400 animate-spin-slow" />
-            <span>Form Pelaporan Warga Mandiri — BaaS Firestore Ready</span>
-          </div>
-          <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Laporkan Titik Kritis Sampah Pesisir
-          </h3>
-          <p className="text-sm text-slate-400 mt-1 max-w-2xl">
-            Unggah bukti foto pantai, jalankan analisis instan Groq AI LPU, dan pantau proses verifikasi anggaran serta tindakan nyata pemerintah secara transparan.
-          </p>
-        </div>
-
-        <div className="hidden lg:flex items-center gap-2 px-3 py-2 bg-slate-900/80 rounded-xl border border-slate-700/60 text-xs text-slate-300">
-          <ShieldCheck size={16} className="text-emerald-400" />
-          <span>Terbuka & Akuntabel</span>
-        </div>
-      </div>
-
+    <div className="w-full bg-white text-[#0F172A]">
       {isSubmittedSuccess ? (
-        <div className="p-8 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-center animate-fade-in my-6">
-          <div className="w-16 h-16 bg-emerald-500/20 text-emerald-300 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-400/30">
-            <CheckCircle2 size={36} />
+        <div className="p-8 rounded-2xl bg-[#DCFCE7] border border-[#BBF7D0] text-center space-y-3 animate-fade-in my-4">
+          <div className="w-14 h-14 bg-[#16A34A] text-white rounded-full flex items-center justify-center mx-auto shadow-xs">
+            <CheckCircle2 size={30} />
           </div>
-          <h4 className="text-xl font-bold text-white mb-2">Laporan Berhasil Diterbitkan ke Feed Publik!</h4>
-          <p className="text-sm text-emerald-200/90 max-w-lg mx-auto mb-4">
-            Dokumen laporan Anda telah terdaftar di koleksi Firestore publik Reforca. Warga lain kini dapat memberikan upvote dukungan, dan tim pengawas instansi dapat memasukkannya ke dalam AI Priority Matrix.
+          <h3 className="text-xl font-bold text-[#0F172A]">
+            Laporan Berhasil Diterbitkan!
+          </h3>
+          <p className="text-xs sm:text-sm text-[#475569] max-w-md mx-auto">
+            Terima kasih atas kepedulian Anda. Laporan titik sampah ini telah diterbitkan ke Peta Real-Time dan masuk ke antrean prioritas dinas terkait.
           </p>
-          <span className="inline-block text-xs font-medium text-emerald-400 bg-emerald-950 px-3 py-1.5 rounded-lg border border-emerald-500/20">
-            Status: Menunggu Penugasan Dinas / Vendor (Pending)
-          </span>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
-            {/* Left Column: Image Selection & Groq AI Analyzer */}
-            <div className="lg:col-span-5 space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-cyan-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <ImageIcon size={14} />
-                  1. Foto Bukti Sampah Pantai (Before)
+            {/* KOLOM KIRI: PREVIEW FOTO, 3 THUMBNAILS & AI VISION BOX */}
+            <div className="lg:col-span-6 space-y-4">
+              
+              {/* Photo Preview Card */}
+              <div className="rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] p-4 space-y-3">
+                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider flex items-center gap-1.5">
+                  <ImageIcon size={15} className="text-[#1D4ED8]" />
+                  <span>1. Foto Bukti Sampah Pantai (Before)</span>
                 </label>
 
-                {/* Main Preview Container */}
-                <div className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-slate-900 border-2 border-dashed border-teal-500/40 group">
+                {/* Main Image View */}
+                <div className="relative rounded-xl overflow-hidden aspect-[16/10] bg-slate-100 border border-[#E2E8F0] group">
                   <img 
-                    src={photoUrl} 
-                    alt="Pratinjau Sampah Pesisir" 
+                    src={currentPhotoUrl} 
+                    alt="Bukti Sampah Pantai" 
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex items-end p-4">
-                    <span className="text-xs text-slate-200 font-medium bg-slate-900/80 px-2.5 py-1 rounded-lg backdrop-blur border border-slate-700">
-                      Resolusi Kamera Lapangan Siap Analisis
-                    </span>
+                  
+                  <div className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-[#E2E8F0] text-[11px] font-bold text-[#1D4ED8] shadow-xs flex items-center gap-1.5">
+                    <Activity size={13} className="text-[#1D4ED8]" />
+                    <span>Resolusi Siap Analisis</span>
                   </div>
                 </div>
 
-                {/* Preset Selector */}
-                <div className="mt-3">
-                  <span className="text-xs text-slate-400 block mb-1.5 font-medium">
-                    Atau gunakan contoh foto kondisi pesisir nyata:
+                {/* 3 Foto Thumbnail Contoh Kondisi Pesisir */}
+                <div>
+                  <span className="text-[11px] text-[#64748B] block mb-1.5 font-medium">
+                    Pilih contoh foto kondisi pesisir:
                   </span>
                   <div className="grid grid-cols-3 gap-2">
-                    {PRESET_IMAGES.map((preset, idx) => (
+                    {PRESET_THUMBNAILS.map((thumb, idx) => (
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => handleSelectPreset(idx)}
-                        className={`text-left p-1.5 rounded-xl border text-[11px] leading-tight transition-all flex flex-col items-center gap-1 ${
-                          selectedPresetIndex === idx
-                            ? 'bg-teal-950/80 border-teal-400 text-teal-200 font-semibold ring-2 ring-teal-500/30'
-                            : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                        onClick={() => handleSelectThumbnail(idx)}
+                        className={`p-1.5 rounded-xl border text-[11px] transition-all flex flex-col items-center gap-1 text-left ${
+                          activeThumbnailIndex === idx
+                            ? 'bg-white border-[#1D4ED8] text-[#1D4ED8] ring-1 ring-[#1D4ED8] font-bold shadow-xs'
+                            : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'
                         }`}
                       >
-                        <img src={preset.url} alt="" className="w-full h-12 object-cover rounded-lg" />
-                        <span className="line-clamp-1 text-center">{preset.label}</span>
+                        <img 
+                          src={thumb.url} 
+                          alt={thumb.title} 
+                          className="w-full h-11 object-cover rounded-lg" 
+                        />
+                        <span className="line-clamp-1 text-center w-full text-[10px]">{thumb.title}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               </div>
 
-              {/* GROQ AI ANALYZER SIMULATOR BUTTON */}
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-teal-950/60 border border-teal-500/30 space-y-3">
-                <div className="flex items-center justify-between">
+              {/* BOX AI VISION ANALYZER */}
+              <div className="rounded-2xl bg-[#EFF6FF] border border-[#DBEAFE] p-4 sm:p-5 space-y-3">
+                <div className="flex items-center justify-between pb-2.5 border-b border-[#DBEAFE]">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-teal-500/20 text-teal-300 rounded-lg">
+                    <div className="p-2 rounded-xl bg-white text-[#1D4ED8] border border-[#DBEAFE] shadow-2xs">
                       <Cpu size={16} />
                     </div>
                     <div>
-                      <h5 className="text-xs font-bold text-white">Groq LPU Inference (Llama 3 70B)</h5>
-                      <p className="text-[10px] text-teal-400/80">Analisis visi otomatis jenis sampah & volume</p>
+                      <h4 className="text-xs font-bold text-[#0F172A] uppercase tracking-wider">
+                        Verifikasi AI Reforca
+                      </h4>
+                      <p className="text-[10px] text-[#64748B]">
+                        Model inferensi visi estimasi polutan
+                      </p>
                     </div>
                   </div>
 
-                  {aiResult && (
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      aiResult.severity === 'Darurat' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
-                      aiResult.severity === 'Tinggi' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
-                      'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                    }`}>
-                      {aiResult.severity}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FEE2E2] border border-[#FECACA] text-[#DC2626] text-[11px] font-bold">
+                    <AlertTriangle size={12} />
+                    <span>Darurat (97.4% Akurasi)</span>
+                  </div>
                 </div>
 
                 <button
                   type="button"
                   onClick={handleRunAiAnalyzer}
                   disabled={isAnalyzing}
-                  className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-lg ${
-                    isAnalyzing
-                      ? 'bg-slate-800 text-slate-400 cursor-not-allowed border border-slate-700'
-                      : 'bg-gradient-to-r from-teal-500 via-cyan-500 to-emerald-500 hover:from-teal-600 hover:to-cyan-600 text-slate-950 font-black shadow-glow-teal hover:scale-[1.01]'
-                  }`}
+                  className="w-full py-2.5 px-4 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70"
                 >
-                  <Sparkles size={16} className={isAnalyzing ? 'animate-spin' : ''} />
-                  <span>{isAnalyzing ? 'Menganalisis Foto (Groq LPU Processing...)' : 'Simulasi Groq AI Analyzer'}</span>
+                  <Sparkles size={14} className={isAnalyzing ? 'animate-spin' : ''} />
+                  <span>{isAnalyzing ? 'Memindai Citra Satelit & Visi...' : 'Uji Analisis AI'}</span>
                 </button>
 
                 {isAnalyzing && (
-                  <div className="space-y-1.5 pt-1">
-                    <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div className="space-y-1">
+                    <div className="w-full bg-[#DBEAFE] rounded-full h-1.5 overflow-hidden">
                       <div 
-                        className="bg-gradient-to-r from-teal-400 to-cyan-400 h-1.5 rounded-full transition-all duration-200"
+                        className="bg-[#1D4ED8] h-1.5 rounded-full transition-all duration-300" 
                         style={{ width: `${analysisProgress}%` }}
                       ></div>
                     </div>
-                    <div className="flex justify-between text-[10px] text-cyan-400 font-mono">
-                      <span>Memindai polimer & densitas debris...</span>
-                      <span>{inferenceTokensPerSec} T/s • {analysisProgress}%</span>
-                    </div>
                   </div>
                 )}
 
-                {/* AI Result Cards */}
-                {aiResult && !isAnalyzing && (
-                  <div className="mt-3 p-3 rounded-xl bg-slate-950/80 border border-teal-500/20 text-xs space-y-2 animate-fade-in">
-                    <div className="flex items-center justify-between text-[11px] border-b border-slate-800 pb-1.5">
-                      <span className="text-slate-400">Tingkat Urgensi AI:</span>
-                      <span className={`font-bold ${
-                        aiResult.severity === 'Darurat' ? 'text-rose-400' :
-                        aiResult.severity === 'Tinggi' ? 'text-amber-400' : 'text-cyan-400'
-                      }`}>
-                        {aiResult.severity} ({aiResult.confidenceScore || 95}% Akurasi)
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] border-b border-slate-800 pb-1.5">
-                      <span className="text-slate-400">Estimasi Luas Area:</span>
-                      <span className="font-semibold text-white">± {aiResult.estimatedVolumeM2} m²</span>
-                    </div>
-
-                    <div>
-                      <span className="text-[11px] text-slate-400 block mb-1">Klasifikasi Sampah:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {aiResult.wasteType.map((w, i) => (
-                          <span key={i} className="text-[10px] px-2 py-0.5 rounded-md bg-teal-950 text-teal-300 border border-teal-500/30">
-                            {w}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <p className="text-[11px] text-slate-300 italic bg-slate-900/60 p-2 rounded-lg border border-slate-800/80">
-                      "{aiResult.aiSummary}"
-                    </p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-2.5 rounded-xl bg-white border border-[#DBEAFE]">
+                    <span className="text-[10px] text-[#64748B] block">Luas Area:</span>
+                    <span className="font-bold text-[#1D4ED8]">± 290 m²</span>
                   </div>
-                )}
+                  <div className="p-2.5 rounded-xl bg-white border border-[#DBEAFE]">
+                    <span className="text-[10px] text-[#64748B] block">Kerapatan:</span>
+                    <span className="font-bold text-[#0F172A]">Tinggi (&gt;40 kg/m²)</span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-white border border-[#DBEAFE]">
+                  <span className="text-[10px] uppercase font-bold text-[#1D4ED8] tracking-wider block mb-1">
+                    Hasil Verifikasi:
+                  </span>
+                  <p className="text-xs text-[#334155] leading-relaxed italic">
+                    "{aiData.narrative}"
+                  </p>
+                </div>
               </div>
+
             </div>
 
-            {/* Right Column: Form Fields & Details */}
-            <div className="lg:col-span-7 space-y-5 flex flex-col justify-between">
-              <div className="space-y-4">
-                {/* Beach Location Selector */}
+            {/* KOLOM KANAN: FIELD INPUT LOKASI, DESKRIPSI & KONTAK */}
+            <div className="lg:col-span-6 space-y-4">
+              
+              <div className="rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] p-5 space-y-4">
+                
+                {/* Field 2: Lokasi */}
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <MapPin size={14} />
-                    2. Lokasi Pantai / Titik Pesisir
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <MapPin size={14} className="text-[#1D4ED8]" />
+                    <span>2. Titik Pesisir / Pantai</span>
                   </label>
                   <select
                     value={selectedBeach}
                     onChange={(e) => setSelectedBeach(e.target.value)}
-                    className="w-full bg-slate-900/90 border border-slate-700 focus:border-teal-400 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none transition-colors"
+                    className="w-full bg-white border border-[#E2E8F0] focus:border-[#1D4ED8] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#0F172A] outline-none transition-colors"
                   >
                     {PRESET_BEACHES.map((b, idx) => (
                       <option key={idx} value={b.name}>{b.name}</option>
                     ))}
-                    <option value="CUSTOM">+ Lokasi Pantai Lainnya (Tulis Manual)</option>
+                    <option value="CUSTOM">+ Tulis Lokasi Pantai Secara Manual</option>
                   </select>
 
                   {selectedBeach === 'CUSTOM' && (
                     <input
                       type="text"
-                      placeholder="Contoh: Pantai Mutiara Barat, Dermaga Kali Baru"
+                      placeholder="Masukkan nama pesisir / pulau / dermaga..."
                       value={customBeachName}
                       onChange={(e) => setCustomBeachName(e.target.value)}
-                      className="mt-2 w-full bg-slate-900 border border-teal-500/40 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-teal-400"
+                      className="mt-2 w-full bg-white border border-[#1D4ED8] rounded-xl px-3.5 py-2 text-xs sm:text-sm text-[#0F172A] focus:outline-none"
                       required
                     />
                   )}
                 </div>
 
-                {/* Description */}
+                {/* Field 3: Deskripsi */}
                 <div>
-                  <label className="block text-xs font-bold text-cyan-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                    <FileText size={14} />
-                    3. Deskripsi Kondisi & Dampak Warga
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <FileText size={14} className="text-[#1D4ED8]" />
+                    <span>3. Deskripsi Kondisi & Dampak</span>
                   </label>
                   <textarea
                     rows={4}
-                    placeholder="Ceritakan detail kondisi timbunan sampah, jenis bau, dampak terhadap perahu nelayan, biota laut, atau ekosistem bakau sekitar..."
+                    placeholder="Deskripsikan kondisi timbunan sampah, jenis polutan, atau dampaknya terhadap nelayan..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full bg-slate-900/90 border border-slate-700 focus:border-teal-400 rounded-xl p-3.5 text-sm text-slate-100 placeholder-slate-500 outline-none transition-colors"
+                    className="w-full bg-white border border-[#E2E8F0] focus:border-[#1D4ED8] rounded-xl p-3 text-xs sm:text-sm text-[#0F172A] placeholder-slate-400 outline-none transition-colors resize-none leading-relaxed"
                     required
                   ></textarea>
                 </div>
 
-                {/* Reporter Info (Public Accountability) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Field 4: Pelapor & Kontak */}
+                <div className="space-y-3 pt-1">
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                      <User size={14} />
-                      4. Nama Pelapor / Komunitas
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <User size={14} className="text-[#1D4ED8]" />
+                      <span>4. Nama Pelapor & Komunitas</span>
                     </label>
                     <input
                       type="text"
-                      placeholder="Contoh: Rizky Pratama (Warga Pesisir)"
+                      placeholder="Contoh: Bambang Sudirman"
                       value={reporterName}
                       onChange={(e) => setReporterName(e.target.value)}
-                      className="w-full bg-slate-900/90 border border-slate-700 focus:border-teal-400 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none transition-colors"
+                      className="w-full bg-white border border-[#E2E8F0] focus:border-[#1D4ED8] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#0F172A] outline-none transition-colors"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-cyan-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                      <Phone size={14} />
-                      Kontak / No. WhatsApp (Untuk Verifikasi)
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <Phone size={14} className="text-[#1D4ED8]" />
+                      <span>Kontak WhatsApp (Verifikasi)</span>
                     </label>
                     <input
                       type="text"
-                      placeholder="Contoh: 0812-xxxx-xxxx"
+                      placeholder="Contoh: 0812-8871-3321"
                       value={reporterContact}
                       onChange={(e) => setReporterContact(e.target.value)}
-                      className="w-full bg-slate-900/90 border border-slate-700 focus:border-teal-400 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none transition-colors"
+                      className="w-full bg-white border border-[#E2E8F0] focus:border-[#1D4ED8] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#0F172A] outline-none transition-colors"
+                      required
                     />
                   </div>
                 </div>
+
+                <div className="pt-3 border-t border-[#E2E8F0]">
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 px-6 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
+                  >
+                    <UploadCloud size={17} />
+                    <span>Kirim Laporan Resmi</span>
+                  </button>
+                </div>
+
               </div>
 
-              {/* Submit CTA */}
-              <div className="pt-4 border-t border-slate-800">
-                <button
-                  type="submit"
-                  className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-teal-500 via-cyan-500 to-emerald-500 hover:from-teal-600 hover:to-cyan-600 text-slate-950 font-extrabold text-sm sm:text-base flex items-center justify-center gap-2 shadow-xl shadow-teal-500/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
-                >
-                  <UploadCloud size={20} />
-                  <span>Kirim Laporan Resmi ke Reforca BaaS</span>
-                  <ChevronRight size={18} />
-                </button>
-                <p className="text-[11px] text-slate-400 text-center mt-2">
-                  Laporan akan langsung diterbitkan secara transparan ke peta interaktif dan berhak mendapatkan voting warga.
-                </p>
+              <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-start gap-2.5 text-xs text-[#64748B]">
+                <ShieldCheck size={18} className="text-[#1D4ED8] shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold text-[#0F172A] block mb-0.5">Jaminan Kerahasiaan Data</span>
+                  <p className="leading-snug">
+                    Nomor kontak hanya dipergunakan untuk konfirmasi verifikasi lapangan oleh petugas DLH berwenang.
+                  </p>
+                </div>
               </div>
+
             </div>
 
           </div>
