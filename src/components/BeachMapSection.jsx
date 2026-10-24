@@ -5,17 +5,9 @@ import {
   Layers, 
   Compass, 
   Filter, 
-  CheckCircle2, 
-  Clock, 
-  ChevronRight, 
-  Maximize2,
-  AlertTriangle,
-  Heart,
-  ExternalLink,
   ShieldCheck,
   Search
 } from 'lucide-react';
-import { formatRupiah } from '../data/mockFirestore';
 
 export default function BeachMapSection({ reports = [], onSelectReport }) {
   const mapContainerRef = useRef(null);

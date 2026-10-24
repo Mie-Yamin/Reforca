@@ -1,8 +1,7 @@
 import React from 'react';
-import { Building2 } from 'lucide-react';
 import OrcaLogo from './OrcaLogo';
 
-export default function Footer({ onNavigateToAdmin }) {
+export default function Footer() {
   const scrollTo = (id) => {
     const el = document.getElementById(id);
     if (el) {
@@ -75,10 +74,28 @@ export default function Footer({ onNavigateToAdmin }) {
               <li>
                 <button 
                   type="button" 
+                  onClick={() => scrollTo('peta-laporan')} 
+                  className="hover:text-[#1D4ED8] transition-colors"
+                >
+                  PETA PESISIR
+                </button>
+              </li>
+              <li>
+                <button 
+                  type="button" 
                   onClick={() => scrollTo('laporan-warga')} 
                   className="hover:text-[#1D4ED8] transition-colors"
                 >
                   LAPORAN WARGA
+                </button>
+              </li>
+              <li>
+                <button 
+                  type="button" 
+                  onClick={() => scrollTo('akuntabilitas')} 
+                  className="hover:text-[#1D4ED8] transition-colors"
+                >
+                  TRANSPARANSI ANGGARAN
                 </button>
               </li>
               <li>
@@ -102,26 +119,18 @@ export default function Footer({ onNavigateToAdmin }) {
             </ul>
           </div>
 
-          {/* Akses Instansi & Media Sosial */}
+          {/* Kanal Komunitas & Media Sosial */}
           <div className="space-y-3">
             <h4 className="font-bold text-[#0F172A] uppercase tracking-wider text-xs">
-              Portal & Komunitas
+              Komunitas & Jejaring
             </h4>
             
             <div className="space-y-2.5">
-              <button
-                type="button"
-                onClick={onNavigateToAdmin}
-                className="w-full p-2.5 rounded-xl bg-white hover:bg-[#F1F5F9] border border-[#CBD5E1] text-[#0F172A] text-xs font-bold transition-all flex items-center justify-between group shadow-xs"
-              >
-                <span className="flex items-center gap-2">
-                  <Building2 size={14} className="text-[#1D4ED8]" />
-                  <span>Ruang Komando Instansi</span>
-                </span>
-                <span className="text-[10px] text-[#1D4ED8] font-bold">/admin</span>
-              </button>
+              <p className="text-xs text-[#64748B] leading-relaxed">
+                Bergabunglah bersama gerakan relawan pesisir dan komunitas peduli laut Indonesia.
+              </p>
 
-              <div className="pt-2 space-y-1.5 text-xs text-[#64748B]">
+              <div className="pt-1 space-y-1.5 text-xs text-[#64748B]">
                 <div className="font-semibold text-[#0F172A]">Kanal Informasi:</div>
                 <div className="flex items-center gap-3 pt-1">
                   <a href="#beranda" className="hover:text-[#1D4ED8] transition-colors">

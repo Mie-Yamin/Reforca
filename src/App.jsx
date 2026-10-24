@@ -4,15 +4,17 @@ import 'aos/dist/aos.css';
 import { 
   ArrowUp,
   CheckCircle,
-  Building2,
-  X
+  X,
+  Info
 } from 'lucide-react';
 
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import ImpactStatsBar from './components/ImpactStatsBar';
 import FeaturesSection from './components/FeaturesSection';
+import BeachMapSection from './components/BeachMapSection';
 import CitizenReportsSection from './components/CitizenReportsSection';
+import TransparencyHub from './components/TransparencyHub';
 import FAQSection from './components/FAQSection';
 import ContactSection from './components/ContactSection';
 import Footer from './components/Footer';
@@ -34,6 +36,23 @@ export default function App() {
     return INITIAL_REPORTS;
   });
 
+  // Current user authentication session (Citizen only)
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('reforca_user_session');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed?.role === 'admin') {
+          return { ...parsed, role: 'warga' };
+        }
+        return parsed;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
   // Current route: '/' for Full Landing Page, '/admin' for Ruang Komando Instansi
   const [currentRoute, setCurrentRoute] = useState(() => {
     return window.location.pathname === '/admin' ? '/admin' : '/';
@@ -42,6 +61,7 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [modalInitialTab, setModalInitialTab] = useState('report');
 
   // Initialize AOS animation library
   useEffect(() => {
@@ -76,11 +96,20 @@ export default function App() {
     localStorage.setItem('reforca_reports_v2', JSON.stringify(reports));
   }, [reports]);
 
+  // Persist user session to localStorage
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('reforca_user_session', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('reforca_user_session');
+    }
+  }, [currentUser]);
+
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => {
       setToast(null);
-    }, 4000);
+    }, 4500);
   };
 
   const handleNavigate = (route) => {
@@ -92,9 +121,43 @@ export default function App() {
     }, 150);
   };
 
+  // Open modal with login requirement check
+  const handleOpenReportModal = () => {
+    if (!currentUser) {
+      setModalInitialTab('login');
+      showToast('Silakan masuk atau daftar akun untuk mengirim laporan.', 'info');
+    } else {
+      setModalInitialTab('report');
+    }
+    setIsReportModalOpen(true);
+  };
+
+  const handleOpenLoginModal = () => {
+    setModalInitialTab('login');
+    setIsReportModalOpen(true);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    showToast('Anda telah keluar dari akun.', 'info');
+  };
+
+  const handleLoginSuccess = (user) => {
+    setCurrentUser(user);
+    showToast(`Berhasil masuk sebagai ${user.name}.`, 'success');
+  };
+
   // Add Citizen Report Handler
   const handleAddReport = (newReport) => {
-    setReports((prev) => [newReport, ...prev]);
+    const reportWithUser = {
+      ...newReport,
+      reporterName: currentUser?.name || newReport.reporterName,
+      reporterContact: currentUser?.phone || newReport.reporterContact,
+      reporterEmail: currentUser?.email,
+      reporterUserId: currentUser?.id
+    };
+
+    setReports((prev) => [reportWithUser, ...prev]);
     showToast(`Laporan "${newReport.locationName}" berhasil diterbitkan ke sistem Reforca.`, 'success');
   };
 
@@ -143,8 +206,10 @@ export default function App() {
       {toast && (
         <div className="fixed top-24 right-4 z-[9999] max-w-md animate-fade-in pointer-events-none">
           <div className="pointer-events-auto p-4 rounded-2xl bg-white border border-[#E2E8F0] text-xs shadow-xl flex items-center gap-3 text-[#0F172A]">
-            <div className="p-2 rounded-xl bg-[#DCFCE7] text-[#16A34A]">
-              <CheckCircle size={18} />
+            <div className={`p-2 rounded-xl ${
+              toast.type === 'info' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-[#DCFCE7] text-[#16A34A]'
+            }`}>
+              {toast.type === 'info' ? <Info size={18} /> : <CheckCircle size={18} />}
             </div>
             <p className="flex-1 leading-snug font-medium text-[#334155]">{toast.message}</p>
             <button 
@@ -163,7 +228,10 @@ export default function App() {
       {/* 1. STICKY HEADER NAVBAR (Capsule Mengambang Putih)       */}
       {/* ========================================================= */}
       <Navbar 
-        onOpenReportModal={() => setIsReportModalOpen(true)}
+        currentUser={currentUser}
+        onOpenReportModal={handleOpenReportModal}
+        onOpenLoginModal={handleOpenLoginModal}
+        onLogout={handleLogout}
       />
 
       {/* Conditional View: Landing Page (Default) vs Admin Command Center */}
@@ -171,10 +239,10 @@ export default function App() {
         <main className="flex-1 w-full flex flex-col">
           
           {/* ========================================================= */}
-          {/* 2. HERO SECTION (Tebing Pesisir Nyata + Dark Floating Card)*/}
+          {/* 2. HERO SECTION (Tebing Pesisir Nyata + Floating Card)   */}
           {/* ========================================================= */}
           <HeroSection 
-            onOpenReportModal={() => setIsReportModalOpen(true)}
+            onOpenReportModal={handleOpenReportModal}
             onScrollToReports={scrollToReportsSection}
           />
 
@@ -184,12 +252,22 @@ export default function App() {
           <ImpactStatsBar />
 
           {/* ========================================================= */}
-          {/* 4. SECTION PENGENALAN FITUR (Fitur Utama Reforca)        */}
+          {/* 4. SECTION FITUR UTAMA REFORCA                           */}
           {/* ========================================================= */}
           <FeaturesSection />
 
           {/* ========================================================= */}
-          {/* 5. SECTION LAPORAN WARGA (News/Article Card Grid Layout) */}
+          {/* 5. PETA SEBARAN TITIK KRITIS PESISIR (GIS Leaflet Map)    */}
+          {/* ========================================================= */}
+          <BeachMapSection 
+            reports={reports}
+            onSelectReport={(_report) => {
+              scrollToReportsSection();
+            }}
+          />
+
+          {/* ========================================================= */}
+          {/* 6. SECTION LAPORAN WARGA (News/Article Card Grid Layout) */}
           {/* ========================================================= */}
           <CitizenReportsSection 
             reports={reports}
@@ -197,33 +275,27 @@ export default function App() {
           />
 
           {/* ========================================================= */}
-          {/* 6. SECTION FAQ (Frequently Asked Questions)              */}
+          {/* 7. HUB TRANSPARANSI ANGGARAN & AKUNTABILITAS KERJA       */}
+          {/* ========================================================= */}
+          <TransparencyHub 
+            reports={reports}
+          />
+
+          {/* ========================================================= */}
+          {/* 8. SECTION FAQ (Frequently Asked Questions)              */}
           {/* ========================================================= */}
           <FAQSection />
 
           {/* ========================================================= */}
-          {/* 7. SECTION KONTAK & BANNER PENUTUP                       */}
+          {/* 9. SECTION KONTAK & BANNER PENUTUP                       */}
           {/* ========================================================= */}
           <ContactSection 
-            onOpenReportModal={() => setIsReportModalOpen(true)}
+            onOpenReportModal={handleOpenReportModal}
           />
-
-          {/* Floating Admin Portal Switcher */}
-          <div className="fixed bottom-6 left-6 z-[450] hidden sm:block">
-            <button
-              type="button"
-              onClick={() => handleNavigate('/admin')}
-              className="px-3.5 py-2 rounded-xl bg-white hover:bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] text-xs font-bold shadow-md flex items-center gap-2 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
-              title="Buka Ruang Komando Instansi Pemerintah"
-            >
-              <Building2 size={14} className="text-[#1D4ED8]" />
-              <span>Ruang Komando Instansi (/admin)</span>
-            </button>
-          </div>
 
         </main>
       ) : (
-        /* Admin Command Center Route */
+        /* Admin Command Center Route (Direct Fallback) */
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
           <div className="flex items-center justify-between pb-4 border-b border-[#E2E8F0]">
             <div>
@@ -239,7 +311,7 @@ export default function App() {
               onClick={() => handleNavigate('/')}
               className="px-4 py-2 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-bold transition-all shadow-xs"
             >
-              &larr; Kembali ke Landing Page Warga
+              &larr; Kembali ke Halaman Utama
             </button>
           </div>
 
@@ -264,22 +336,19 @@ export default function App() {
       )}
 
       {/* ========================================================= */}
-      {/* 8. FOOTER BERSIH LATAR PUTIH / GRAY                      */}
+      {/* 10. FOOTER BERSIH DENGAN NAVIGASI LENGKAP                 */}
       {/* ========================================================= */}
-      <Footer onNavigateToAdmin={() => handleNavigate('/admin')} />
+      <Footer />
 
-      {/* Modal Buat Laporan & Masuk Akun */}
+      {/* Modal Buat Laporan & Autentikasi Pengguna */}
       <CreateReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         onSubmitReport={handleAddReport}
-        onLoginSuccess={(role) => {
-          if (role === 'admin') {
-            handleNavigate('/admin');
-          } else {
-            showToast('Selamat datang kembali di Reforca!', 'success');
-          }
-        }}
+        currentUser={currentUser}
+        onLoginSuccess={handleLoginSuccess}
+        onLogout={handleLogout}
+        initialTab={modalInitialTab}
       />
 
     </div>

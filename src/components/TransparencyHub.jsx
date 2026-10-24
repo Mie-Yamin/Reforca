@@ -1,18 +1,13 @@
 import React, { useState } from 'react';
 import { 
-  DollarSign, 
   ShieldCheck, 
-  FileSpreadsheet, 
   Download, 
-  Building2, 
   CheckCircle2, 
   Clock, 
-  Info,
-  ChevronDown,
-  ChevronUp,
-  Sparkles,
   Layers,
-  ArrowRight
+  FileSpreadsheet,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { formatRupiah } from '../data/mockFirestore';
 

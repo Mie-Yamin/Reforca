@@ -53,14 +53,14 @@ const PRESET_THUMBNAILS = [
   }
 ];
 
-export default function PublicReportForm({ onSubmitReport }) {
+export default function PublicReportForm({ onSubmitReport, currentUser }) {
   const [selectedBeach, setSelectedBeach] = useState(PRESET_BEACHES[0].name);
   const [customBeachName, setCustomBeachName] = useState('');
   const [description, setDescription] = useState(
     "Timbunan jaring nelayan dan kantong plastik menumpuk tebal di sela-sela akar bakau setelah pasang air laut. Nelayan setempat kesulitan menambatkan perahu dan air mulai berbau busuk."
   );
-  const [reporterName, setReporterName] = useState('Bambang Sudirman');
-  const [reporterContact, setReporterContact] = useState('0812-8871-3321');
+  const [reporterName, setReporterName] = useState(() => currentUser?.name || 'Bambang Sudirman');
+  const [reporterContact, setReporterContact] = useState(() => currentUser?.phone || currentUser?.email || '0812-8871-3321');
   
   const [activeThumbnailIndex, setActiveThumbnailIndex] = useState(0);
   const [currentPhotoUrl, setCurrentPhotoUrl] = useState(PRESET_THUMBNAILS[0].url);
@@ -345,6 +345,18 @@ export default function PublicReportForm({ onSubmitReport }) {
 
                 {/* Field 4: Pelapor & Kontak */}
                 <div className="space-y-3 pt-1">
+                  {currentUser && (
+                    <div className="p-3 rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] flex items-center justify-between text-xs text-[#1E40AF]">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse"></span>
+                        <span>Akun Terverifikasi: <strong>{currentUser.name}</strong> ({currentUser.email})</span>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-[#1D4ED8] border border-[#BFDBFE] uppercase">
+                        Warga Pelapor Bahari
+                      </span>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                       <User size={14} className="text-[#1D4ED8]" />
