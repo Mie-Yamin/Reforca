@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, PlusCircle, LogIn, LogOut } from 'lucide-react';
+import { Menu, X, Plus, LogIn, LogOut } from 'lucide-react';
 import OrcaLogo from './OrcaLogo';
 
-export default function Navbar({ 
-  onOpenReportModal, 
-  currentUser, 
-  onOpenLoginModal, 
-  onLogout 
+export default function Navbar({
+  onOpenReportModal,
+  currentUser,
+  onOpenLoginModal,
+  onLogout
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -31,6 +31,10 @@ export default function Navbar({
 
   const scrollToSection = (sectionId) => {
     setIsMobileMenuOpen(false);
+    if (sectionId === 'beranda') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     const element = document.getElementById(sectionId);
     if (element) {
       const navOffset = 90;
@@ -44,91 +48,74 @@ export default function Navbar({
     }
   };
 
+  // Navigasi clean dalam uppercase tebal: HOME, FITUR, LAPORAN WARGA, FAQ, KONTAK
   const navLinks = [
     { id: 'beranda', label: 'HOME' },
     { id: 'fitur', label: 'FITUR' },
-    { id: 'peta-laporan', label: 'PETA' },
     { id: 'laporan-warga', label: 'LAPORAN WARGA' },
-    { id: 'akuntabilitas', label: 'TRANSPARANSI' },
     { id: 'faq', label: 'FAQ' },
     { id: 'kontak', label: 'KONTAK' },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full pt-3 sm:pt-4 px-4 sm:px-6 lg:px-8 transition-all duration-300 pointer-events-none">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full pt-3 sm:pt-4 px-4 sm:px-6 lg:px-8 transition-all duration-300 pointer-events-none">
       <div className="max-w-7xl mx-auto pointer-events-auto">
-        {/* Floating White Capsule Navbar */}
-        <div 
-          className={`w-full rounded-full bg-white/95 backdrop-blur-md border border-[#E2E8F0] px-4 sm:px-6 py-2.5 sm:py-3 transition-all duration-300 ${
-            isScrolled 
-              ? 'shadow-lg shadow-slate-900/10' 
+        {/* Floating Header Navbar: Container Pill Putih Bersih di atas Gambar Latar */}
+        <div
+          className={`w-full rounded-full bg-white border border-[#E2E8F0] px-4 sm:px-6 py-2 sm:py-2.5 transition-all duration-300 ${isScrolled
+              ? 'shadow-lg shadow-slate-900/10'
               : 'shadow-md shadow-slate-900/5'
-          }`}
+            }`}
         >
-          <div className="flex items-center justify-between gap-2">
-            
-            {/* Logo Orca Reforca di sebelah kiri */}
+          <div className="flex items-center justify-between gap-4">
+
+            {/* Left: Reforca official Orca logo (from src/assets/reforca-logo.png) */}
             <button 
               type="button"
               onClick={() => scrollToSection('beranda')}
-              className="flex items-center gap-2.5 group text-left focus:outline-none focus:ring-2 focus:ring-[#1D4ED8] rounded-full p-1 shrink-0"
+              className="flex items-center gap-2 group text-left focus:outline-none focus:ring-2 focus:ring-[#1D4ED8] rounded-xl p-0.5 shrink-0"
               aria-label="Reforca Beranda"
             >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#EFF6FF] border border-[#DBEAFE] flex items-center justify-center shadow-xs transition-transform group-hover:scale-105">
-                <OrcaLogo className="w-7 h-7 sm:w-8 sm:h-8" />
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-lg sm:text-xl font-extrabold tracking-tight text-[#0F172A] font-sans">
-                    Reforca
-                  </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#1D4ED8] border border-[#DBEAFE] uppercase tracking-wider hidden lg:inline-block">
-                    Report For Care
-                  </span>
-                </div>
-              </div>
+              <OrcaLogo className="h-11 sm:h-12 md:h-14 w-auto object-contain group-hover:scale-105 transition-transform" />
             </button>
 
-            {/* Menu Navigasi Tengah (HOME, FITUR, PETA, LAPORAN WARGA, TRANSPARANSI, FAQ, KONTAK) */}
-            <nav className="hidden xl:flex items-center gap-1" aria-label="Navigasi Utama">
+            {/* Center: Clean navigation links in bold dark uppercase: HOME, FITUR, LAPORAN WARGA, FAQ, KONTAK */}
+            <nav className="hidden lg:flex items-center gap-1.5 xl:gap-2" aria-label="Navigasi Utama">
               {navLinks.map((link) => (
                 <button
                   key={link.id}
                   type="button"
                   onClick={() => scrollToSection(link.id)}
-                  className="px-3 py-1.5 rounded-full text-xs font-bold text-[#0F172A] hover:text-[#1D4ED8] hover:bg-[#F8FAFC] transition-colors focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+                  className="px-3.5 py-1.5 rounded-full text-xs xl:text-[13px] font-bold tracking-wider text-[#0F172A] hover:text-[#1D4ED8] hover:bg-[#F8FAFC] transition-colors focus:outline-none focus:ring-2 focus:ring-[#1D4ED8] uppercase"
                 >
                   {link.label}
                 </button>
               ))}
             </nav>
 
-            {/* Navigasi Compact untuk layar Medium (md s/d lg) */}
-            <nav className="hidden md:flex xl:hidden items-center gap-1" aria-label="Navigasi Utama Ringkas">
-              {navLinks.slice(0, 5).map((link) => (
+            {/* Navigasi Compact untuk layar Tablet (md s/d lg) */}
+            <nav className="hidden md:flex lg:hidden items-center gap-1" aria-label="Navigasi Utama Ringkas">
+              {navLinks.map((link) => (
                 <button
                   key={link.id}
                   type="button"
                   onClick={() => scrollToSection(link.id)}
-                  className="px-2.5 py-1.5 rounded-full text-[11px] font-bold text-[#0F172A] hover:text-[#1D4ED8] hover:bg-[#F8FAFC] transition-colors focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+                  className="px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wider text-[#0F172A] hover:text-[#1D4ED8] hover:bg-[#F8FAFC] transition-colors focus:outline-none focus:ring-2 focus:ring-[#1D4ED8] uppercase"
                 >
                   {link.label}
                 </button>
               ))}
             </nav>
 
-            {/* Tombol Masuk Akun / Profil & Buat Laporan */}
-            <div className="hidden sm:flex items-center gap-2 shrink-0">
+            {/* Right: Pill-shaped action button + Buat Laporan in solid ocean blue (#1D4ED8) */}
+            <div className="hidden sm:flex items-center gap-2.5 shrink-0">
               {currentUser ? (
-                <div className="flex items-center gap-1.5 p-1 pl-2 pr-1 rounded-full bg-[#F8FAFC] border border-[#CBD5E1]">
+                <div className="flex items-center gap-1.5 p-1 pl-2.5 pr-1.5 rounded-full bg-[#F8FAFC] border border-[#CBD5E1]">
                   <div className="w-6 h-6 rounded-full bg-[#1D4ED8] text-white flex items-center justify-center font-bold text-[10px]">
-                    {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+                    {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'W'}
                   </div>
-                  <span className="text-xs font-bold text-[#0F172A] max-w-[110px] truncate" title={currentUser.name}>
+                  <span className="text-xs font-bold text-[#0F172A] max-w-[90px] truncate" title={currentUser.name}>
                     {currentUser.name.split(' ')[0]}
-                  </span>
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE] uppercase">
-                    Warga
                   </span>
                   <button
                     type="button"
@@ -143,19 +130,20 @@ export default function Navbar({
                 <button
                   type="button"
                   onClick={onOpenLoginModal}
-                  className="px-3.5 py-2 rounded-full text-[#1D4ED8] hover:bg-[#EFF6FF] border border-[#DBEAFE] font-bold text-xs transition-all flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-full text-[#1D4ED8] hover:bg-[#EFF6FF] border border-[#DBEAFE] font-bold text-xs transition-all flex items-center gap-1.5"
                 >
-                  <LogIn size={14} />
+                  <LogIn size={13} />
                   <span>Masuk</span>
                 </button>
               )}
 
+              {/* Pill-shaped primary action button: + Buat Laporan */}
               <button
                 type="button"
                 onClick={onOpenReportModal}
-                className="px-4 sm:px-5 py-2 rounded-full bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-xs sm:text-sm shadow-sm transition-all hover:shadow hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8] focus:ring-offset-2 flex items-center gap-1.5"
+                className="px-5 py-2 sm:py-2.5 rounded-full bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-xs sm:text-sm shadow-sm transition-all hover:shadow hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8] focus:ring-offset-2 flex items-center gap-1.5 shrink-0"
               >
-                <PlusCircle size={15} />
+                <Plus size={16} className="stroke-[2.5]" />
                 <span>Buat Laporan</span>
               </button>
             </div>
@@ -176,19 +164,19 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* Mobile Drawer Menu (Clean White Pill Card) */}
+        {/* Mobile Drawer Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden mt-2 rounded-2xl border border-[#E2E8F0] bg-white/95 backdrop-blur-xl p-4 shadow-xl space-y-2 animate-fade-in">
             {currentUser && (
               <div className="p-3 mb-2 rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-full bg-[#1D4ED8] text-white flex items-center justify-center font-bold text-xs">
-                    {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+                    {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'W'}
                   </div>
                   <div>
                     <span className="font-bold text-[#0F172A] block">{currentUser.name}</span>
                     <span className="text-[10px] text-[#1D4ED8] font-semibold uppercase">
-                      Warga Pelapor Bahari
+                      Warga Pelapor
                     </span>
                   </div>
                 </div>
@@ -211,7 +199,7 @@ export default function Navbar({
                 key={link.id}
                 type="button"
                 onClick={() => scrollToSection(link.id)}
-                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-[#0F172A] hover:text-[#1D4ED8] hover:bg-[#F8FAFC] transition-colors"
+                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold text-[#0F172A] hover:text-[#1D4ED8] hover:bg-[#F8FAFC] transition-colors uppercase tracking-wider"
               >
                 {link.label}
               </button>
@@ -228,7 +216,7 @@ export default function Navbar({
                   className="w-full py-2.5 rounded-xl bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE] font-bold text-xs shadow-xs flex items-center justify-center gap-2"
                 >
                   <LogIn size={15} />
-                  <span>Masuk / Daftar Akun</span>
+                  <span>Masuk Akun</span>
                 </button>
               )}
 
@@ -240,7 +228,7 @@ export default function Navbar({
                 }}
                 className="w-full py-2.5 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-xs shadow-sm flex items-center justify-center gap-2"
               >
-                <PlusCircle size={16} />
+                <Plus size={16} className="stroke-[2.5]" />
                 <span>Buat Laporan</span>
               </button>
             </div>

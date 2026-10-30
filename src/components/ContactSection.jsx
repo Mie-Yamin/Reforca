@@ -41,12 +41,23 @@ export default function ContactSection({ onOpenReportModal }) {
   };
 
   return (
-    <section id="kontak" className="py-20 lg:py-28 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+    <section 
+      id="kontak" 
+      className="relative py-20 lg:py-28 bg-white border-b border-[#E2E8F0] overflow-hidden"
+    >
+      {/* Subtle Coastal Wave Texture (Low-opacity 4% blended with #FFFFFF) */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-[0.04] mix-blend-multiply"
+        style={{
+          backgroundImage: `url('/images/coral_reef_seabed.jpg')`,
+        }}
+      />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3" data-aos="fade-up">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFF6FF] border border-[#DBEAFE] text-[#1D4ED8] text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#EFF6FF] border border-[#DBEAFE] text-[#1D4ED8] text-xs font-bold uppercase tracking-wider">
             <Mail size={13} />
             <span>Kemitraan & Masukan Publik</span>
           </div>
@@ -63,8 +74,8 @@ export default function ContactSection({ onOpenReportModal }) {
         {/* Form Kontak Cepat & Info Kontak */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-5xl mx-auto" data-aos="fade-up">
           
-          {/* Card Info Kontak Kiri */}
-          <div className="lg:col-span-5 rounded-2xl p-6 sm:p-8 bg-[#F8FAFC] border border-[#E2E8F0] space-y-6">
+          {/* Card Info Kontak Kiri: Clean White Element (#FFFFFF) with shadow-sm */}
+          <div className="lg:col-span-5 rounded-2xl p-6 sm:p-8 bg-white border border-[#E2E8F0] shadow-sm space-y-6">
             <div className="space-y-1.5">
               <span className="text-xs font-bold text-[#1D4ED8] uppercase tracking-wider">
                 Sekretariat Nasional
@@ -92,7 +103,7 @@ export default function ContactSection({ onOpenReportModal }) {
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-white border border-[#E2E8F0] space-y-1.5 shadow-2xs">
+            <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5">
               <div className="flex items-center gap-1.5 text-xs font-bold text-[#1D4ED8]">
                 <ShieldCheck size={16} />
                 <span>Keamanan & Validasi Data</span>
@@ -103,7 +114,7 @@ export default function ContactSection({ onOpenReportModal }) {
             </div>
           </div>
 
-          {/* Form Input Kanan */}
+          {/* Form Input Kanan: Clean White Element (#FFFFFF) with shadow-sm */}
           <div className="lg:col-span-7 rounded-2xl p-6 sm:p-8 bg-white border border-[#E2E8F0] shadow-sm">
             {submitted ? (
               <div className="text-center py-12 space-y-3 animate-fade-in">
@@ -208,9 +219,9 @@ export default function ContactSection({ onOpenReportModal }) {
 
         </div>
 
-        {/* Banner CTA Penutup Berwarna Primary Ocean Blue Matte (#1D4ED8) */}
+        {/* Banner CTA Penutup: Primary Ocean Blue with clean white button */}
         <div 
-          className="rounded-3xl p-8 sm:p-12 text-center space-y-6 relative overflow-hidden bg-[#1D4ED8] text-white shadow-xl"
+          className="rounded-3xl p-8 sm:p-12 text-center space-y-6 relative overflow-hidden bg-[#1D4ED8] text-white shadow-sm"
           data-aos="fade-up"
         >
           <div className="relative z-10 space-y-4 max-w-3xl mx-auto">
@@ -218,9 +229,8 @@ export default function ContactSection({ onOpenReportModal }) {
               Aksi Nyata Pelestarian Bahari
             </span>
 
-            {/* Headline Banner Penutup Sesuai Instruksi */}
             <h3 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
-              Mulai Berkontribusi untuk Laut Indonesia Today
+              Mulai Berkontribusi untuk Laut Indonesia Bersama Reforca
             </h3>
 
             <p className="text-sm sm:text-base text-blue-100 max-w-xl mx-auto leading-relaxed">
@@ -231,7 +241,7 @@ export default function ContactSection({ onOpenReportModal }) {
               <button
                 type="button"
                 onClick={onOpenReportModal}
-                className="px-8 py-4 rounded-full bg-white hover:bg-slate-50 text-[#1D4ED8] font-extrabold text-sm sm:text-base shadow-lg inline-flex items-center gap-2.5 transition-all hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white"
+                className="px-8 py-4 rounded-full bg-white hover:bg-slate-50 text-[#1D4ED8] font-extrabold text-sm sm:text-base shadow-sm inline-flex items-center gap-2.5 transition-all hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white"
               >
                 <PlusCircle size={18} />
                 <span>Laporkan Masalah Sekarang</span>

@@ -1,7 +1,20 @@
 import React from 'react';
-import { PlusCircle, Eye } from 'lucide-react';
+import { ArrowRight, Eye } from 'lucide-react';
 
-export default function HeroSection({ onOpenReportModal, onScrollToReports }) {
+export default function HeroSection({ onScrollToReports }) {
+  const scrollToFeatures = () => {
+    const el = document.getElementById('fitur');
+    if (el) {
+      const navOffset = 90;
+      const elementPosition = el.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - navOffset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   const scrollToReports = () => {
     if (onScrollToReports) {
       onScrollToReports();
@@ -22,23 +35,23 @@ export default function HeroSection({ onOpenReportModal, onScrollToReports }) {
   return (
     <section 
       id="beranda" 
-      className="relative min-h-[85vh] sm:min-h-[88vh] flex items-center overflow-hidden bg-cover bg-center pt-8 pb-16 sm:pb-24"
+      className="relative min-h-[92vh] sm:min-h-screen flex items-center overflow-hidden bg-cover bg-center pt-28 sm:pt-36 pb-16 sm:pb-24"
       style={{
         backgroundImage: `url('/images/coastal_cliff_hero.jpg')`,
       }}
     >
-      {/* Subtle Natural Sunlit Daylight Overlay */}
-      <div className="absolute inset-0 bg-slate-900/15 pointer-events-none"></div>
+      {/* Soft natural overlay agar kontras pemandangan pesisir tebing dan air biru jernih tetap memikat */}
+      <div className="absolute inset-0 bg-slate-950/20 backdrop-brightness-95 pointer-events-none"></div>
 
       {/* Hero Content Container */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="max-w-2xl text-left" data-aos="fade-up">
           
-          {/* Floating Card Melengkung Berwarna Biru Gelap Matte Semi-Transparan (Opacity 85%) */}
+          {/* Floating Glass Card: Dark navy slate container (#0F172A at ~85% opacity) with 20px rounded corners */}
           <div 
-            className="rounded-[28px] p-7 sm:p-10 lg:p-12 border border-white/15 shadow-2xl space-y-6"
+            className="rounded-[20px] p-7 sm:p-10 lg:p-12 border border-white/15 shadow-2xl space-y-6"
             style={{
-              backgroundColor: 'rgba(30, 41, 59, 0.85)',
+              backgroundColor: 'rgba(15, 23, 42, 0.85)',
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
             }}
@@ -49,29 +62,27 @@ export default function HeroSection({ onOpenReportModal, onScrollToReports }) {
               <span>Platform Pengawasan & Aksi Pesisir</span>
             </div>
 
-            {/* Headline Teks Putih, Bold */}
+            {/* Large, bold white typography headline */}
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.18] font-sans">
               Jaga Ekosistem Pesisir dan Laut Bersama Reforca
             </h1>
 
-            {/* Sub-teks Deskripsi Singkat */}
+            {/* Supporting description text in clean white/light gray */}
             <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-normal">
-              Platform partisipasi publik untuk memantau, mendokumentasikan, dan mempercepat penanganan limbah pantai di seluruh perairan Indonesia bersama instansi berwenang secara transparan.
+              Laporkan kerusakan, pencemaran, dan ancaman lingkungan laut di sekitarmu. Setiap laporan adalah langkah nyata untuk pesisir yang lebih terjaga.
             </p>
 
-            {/* 2 Tombol Aksi Matte */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-              {/* Primary Blue Button */}
+            {/* Primary button: "Jelajahi Lebih Lanjut" in solid ocean blue (#1D4ED8) & secondary outlined glass button */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 pt-2">
               <button
                 type="button"
-                onClick={onOpenReportModal}
+                onClick={scrollToFeatures}
                 className="px-6 py-3.5 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-sm shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-white"
               >
-                <PlusCircle size={17} />
-                <span>Laporkan Masalah</span>
+                <span>Jelajahi Lebih Lanjut</span>
+                <ArrowRight size={17} />
               </button>
 
-              {/* Outlined Button */}
               <button
                 type="button"
                 onClick={scrollToReports}

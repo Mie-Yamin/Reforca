@@ -2,15 +2,14 @@ import React, { useState, useEffect } from 'react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { 
-  ArrowUp,
-  CheckCircle,
-  X,
-  Info
+  ArrowUp, 
+  CheckCircle, 
+  X, 
+  Info 
 } from 'lucide-react';
 
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
-import ImpactStatsBar from './components/ImpactStatsBar';
 import FeaturesSection from './components/FeaturesSection';
 import BeachMapSection from './components/BeachMapSection';
 import CitizenReportsSection from './components/CitizenReportsSection';
@@ -36,7 +35,7 @@ export default function App() {
     return INITIAL_REPORTS;
   });
 
-  // Current user authentication session (Citizen only)
+  // Sesi akun pengguna (Warga)
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('reforca_user_session');
     if (saved) {
@@ -53,7 +52,7 @@ export default function App() {
     return null;
   });
 
-  // Current route: '/' for Full Landing Page, '/admin' for Ruang Komando Instansi
+  // Current route: '/' untuk Landing Page, '/admin' untuk Ruang Komando Instansi
   const [currentRoute, setCurrentRoute] = useState(() => {
     return window.location.pathname === '/admin' ? '/admin' : '/';
   });
@@ -73,7 +72,7 @@ export default function App() {
     });
   }, []);
 
-  // Sync route on browser navigation popstate
+  // Sync route pada browser popstate
   useEffect(() => {
     const handlePopState = () => {
       setCurrentRoute(window.location.pathname === '/admin' ? '/admin' : '/');
@@ -91,12 +90,12 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Persist reports to localStorage
+  // Simpan data laporan ke localStorage
   useEffect(() => {
     localStorage.setItem('reforca_reports_v2', JSON.stringify(reports));
   }, [reports]);
 
-  // Persist user session to localStorage
+  // Simpan sesi user ke localStorage
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem('reforca_user_session', JSON.stringify(currentUser));
@@ -121,7 +120,6 @@ export default function App() {
     }, 150);
   };
 
-  // Open modal with login requirement check
   const handleOpenReportModal = () => {
     if (!currentUser) {
       setModalInitialTab('login');
@@ -147,7 +145,6 @@ export default function App() {
     showToast(`Berhasil masuk sebagai ${user.name}.`, 'success');
   };
 
-  // Add Citizen Report Handler
   const handleAddReport = (newReport) => {
     const reportWithUser = {
       ...newReport,
@@ -161,7 +158,6 @@ export default function App() {
     showToast(`Laporan "${newReport.locationName}" berhasil diterbitkan ke sistem Reforca.`, 'success');
   };
 
-  // Upvote Handler
   const handleUpvote = (reportId, isIncrement) => {
     setReports((prev) =>
       prev.map((r) => {
@@ -178,7 +174,6 @@ export default function App() {
     }
   };
 
-  // Update Report (from Admin command center)
   const handleUpdateReport = (updatedDoc) => {
     setReports((prev) =>
       prev.map((r) => (r.id === updatedDoc.id ? updatedDoc : r))
@@ -200,7 +195,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-[#0F172A] font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-[#0F172A] text-[#0F172A] font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
       
       {/* Toast Notification */}
       {toast && (
@@ -224,9 +219,7 @@ export default function App() {
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* 1. STICKY HEADER NAVBAR (Capsule Mengambang Putih)       */}
-      {/* ========================================================= */}
+      {/* 1. FLOATING HEADER NAVBAR (Clean White Pill Container: HOME, FITUR, LAPORAN WARGA, FAQ, KONTAK) */}
       <Navbar 
         currentUser={currentUser}
         onOpenReportModal={handleOpenReportModal}
@@ -234,31 +227,18 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      {/* Conditional View: Landing Page (Default) vs Admin Command Center */}
       {currentRoute === '/' ? (
         <main className="flex-1 w-full flex flex-col">
           
-          {/* ========================================================= */}
-          {/* 2. HERO SECTION (Tebing Pesisir Nyata + Floating Card)   */}
-          {/* ========================================================= */}
+          {/* 2. HERO SECTION (Latar Pantai & Tebing Tropis + Floating Glass Card Deep Slate Navy 85%) */}
           <HeroSection 
-            onOpenReportModal={handleOpenReportModal}
             onScrollToReports={scrollToReportsSection}
           />
 
-          {/* ========================================================= */}
-          {/* 3. IMPACT STATS BAR (Clean Style White Banner)           */}
-          {/* ========================================================= */}
-          <ImpactStatsBar />
-
-          {/* ========================================================= */}
-          {/* 4. SECTION FITUR UTAMA REFORCA                           */}
-          {/* ========================================================= */}
+          {/* 3. SECTION FITUR & ALUR KERJA WEB */}
           <FeaturesSection />
 
-          {/* ========================================================= */}
-          {/* 5. PETA SEBARAN TITIK KRITIS PESISIR (GIS Leaflet Map)    */}
-          {/* ========================================================= */}
+          {/* 4. SECTION PETA INTERAKTIF & LIVE STATS */}
           <BeachMapSection 
             reports={reports}
             onSelectReport={(_report) => {
@@ -266,43 +246,35 @@ export default function App() {
             }}
           />
 
-          {/* ========================================================= */}
-          {/* 6. SECTION LAPORAN WARGA (News/Article Card Grid Layout) */}
-          {/* ========================================================= */}
+          {/* 5. SECTION LAPORAN WARGA */}
           <CitizenReportsSection 
             reports={reports}
             onUpvote={handleUpvote}
           />
 
-          {/* ========================================================= */}
-          {/* 7. HUB TRANSPARANSI ANGGARAN & AKUNTABILITAS KERJA       */}
-          {/* ========================================================= */}
+          {/* 6. SECTION TRANSPARANSI DATA & ANGGARAN */}
           <TransparencyHub 
             reports={reports}
           />
 
-          {/* ========================================================= */}
-          {/* 8. SECTION FAQ (Frequently Asked Questions)              */}
-          {/* ========================================================= */}
+          {/* 7. SECTION FAQ */}
           <FAQSection />
 
-          {/* ========================================================= */}
-          {/* 9. SECTION KONTAK & BANNER PENUTUP                       */}
-          {/* ========================================================= */}
+          {/* 8. SECTION KONTAK */}
           <ContactSection 
             onOpenReportModal={handleOpenReportModal}
           />
 
         </main>
       ) : (
-        /* Admin Command Center Route (Direct Fallback) */
+        /* Admin Command Center Route (Ruang Komando Instansi) */
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-[#E2E8F0]">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-700">
             <div>
-              <span className="text-xs font-bold text-[#1D4ED8] uppercase tracking-wider">
+              <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider">
                 Portal Internal Kedinasan
               </span>
-              <h1 className="text-2xl font-black text-[#0F172A]">
+              <h1 className="text-2xl font-black text-white">
                 Ruang Komando Instansi: Dinas Lingkungan Hidup
               </h1>
             </div>
@@ -335,9 +307,7 @@ export default function App() {
         </button>
       )}
 
-      {/* ========================================================= */}
-      {/* 10. FOOTER BERSIH DENGAN NAVIGASI LENGKAP                 */}
-      {/* ========================================================= */}
+      {/* FOOTER RINGKAS */}
       <Footer />
 
       {/* Modal Buat Laporan & Autentikasi Pengguna */}

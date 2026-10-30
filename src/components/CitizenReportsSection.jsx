@@ -27,7 +27,7 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
       { id: 'c4', name: 'Agus Purnomo', text: 'Sebelum dan sesudahnya sangat kontras. Mari jaga bersama jangan buang sampah lagi.', time: '2 hari lalu' }
     ],
     reforca_doc_004: [
-      { id: 'c5', name: 'Budi Santoso', text: 'Bebatuan pemecah ombak memang sering jadi perangkap sachet. Perlu tempat sampah lebih banyak di dekat warung.', time: '3 hari lalu' }
+      { id: 'c5', name: 'Budi Santoso', text: 'Bebatuan pemecah ombak memang sering jadi perangkap sachet. Perlu tempat sampah lebih banyak di dekat dermaga.', time: '3 hari lalu' }
     ]
   });
 
@@ -75,7 +75,7 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
     setNewCommentText('');
   };
 
-  // Status Matte: Hijau Soft (#16A34A) untuk 'Tuntas' dan Amber Soft (#D97706) untuk 'Masa Perbaikan'
+  // Status Matte: Hijau Lembut (#16A34A) untuk 'Tuntas' dan Amber Lembut (#D97706) untuk 'Masa Perbaikan'
   const getNormalizedStatus = (report) => {
     if (report.status === 'Completed' || report.citizenConfirmed) {
       return {
@@ -105,31 +105,42 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
   });
 
   return (
-    <section id="laporan-warga" className="py-20 lg:py-28 bg-[#FFFFFF] border-b border-[#E2E8F0]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <section 
+      id="laporan-warga" 
+      className="relative py-20 lg:py-28 bg-[#F8FAFC] border-b border-[#E2E8F0] overflow-hidden"
+    >
+      {/* Subtle Coastal Fine Sand / Shore Texture (Low-opacity 4% blended with #F8FAFC) */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-[0.04] mix-blend-multiply"
+        style={{
+          backgroundImage: `url('/images/coastal_cliff_hero.jpg')`,
+        }}
+      />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6" data-aos="fade-up">
           <div className="space-y-2.5 max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFF6FF] border border-[#DBEAFE] text-[#1D4ED8] text-xs font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#EFF6FF] border border-[#DBEAFE] text-[#1D4ED8] text-xs font-bold uppercase tracking-wider">
               Dokumentasi Publik
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight">
               Laporan Warga Pesisir
             </h2>
             <p className="text-[#64748B] text-sm sm:text-base leading-relaxed">
-              Koleksi laporan kondisi pantai terbaru yang dikirim oleh masyarakat pesisir. Setiap laporan diverifikasi AI dan dikawal hingga proses pembersihan selesai.
+              Koleksi dokumentasi kondisi pantai terkini yang dikirim oleh masyarakat pesisir. Setiap laporan diverifikasi AI dan dipantau hingga pembersihan tuntas.
             </p>
           </div>
 
           {/* Filter Status Buttons Matte Light */}
-          <div className="flex items-center gap-2 p-1 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
+          <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
             <button
               type="button"
               onClick={() => setFilterStatus('ALL')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 filterStatus === 'ALL'
-                  ? 'bg-white text-[#0F172A] shadow-xs border border-[#CBD5E1]'
+                  ? 'bg-[#1D4ED8] text-white shadow-xs'
                   : 'text-[#64748B] hover:text-[#0F172A]'
               }`}
             >
@@ -140,11 +151,11 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
               onClick={() => setFilterStatus('TUNTAS')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 filterStatus === 'TUNTAS'
-                  ? 'bg-white text-[#16A34A] shadow-xs border border-[#BBF7D0]'
+                  ? 'bg-[#16A34A] text-white shadow-xs'
                   : 'text-[#64748B] hover:text-[#16A34A]'
               }`}
             >
-              <span className="w-2 h-2 rounded-full bg-[#16A34A]"></span>
+              <span className={`w-2 h-2 rounded-full ${filterStatus === 'TUNTAS' ? 'bg-white' : 'bg-[#16A34A]'}`}></span>
               <span>Tuntas</span>
             </button>
             <button
@@ -152,17 +163,17 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
               onClick={() => setFilterStatus('PERBAIKAN')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
                 filterStatus === 'PERBAIKAN'
-                  ? 'bg-white text-[#D97706] shadow-xs border border-[#FDE68A]'
+                  ? 'bg-[#D97706] text-white shadow-xs'
                   : 'text-[#64748B] hover:text-[#D97706]'
               }`}
             >
-              <span className="w-2 h-2 rounded-full bg-[#D97706]"></span>
+              <span className={`w-2 h-2 rounded-full ${filterStatus === 'PERBAIKAN' ? 'bg-white' : 'bg-[#D97706]'}`}></span>
               <span>Masa Perbaikan</span>
             </button>
           </div>
         </div>
 
-        {/* News / Article Card Grid Layout (Reference 2) */}
+        {/* News Card Grid Layout: Clean White Elements (#FFFFFF) with shadow-sm */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8" data-aos="fade-up" data-aos-delay="100">
           {filteredReports.map((report) => {
             const status = getNormalizedStatus(report);
@@ -177,7 +188,7 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
                   setSelectedReport(report);
                   setActivePhotoTab('before');
                 }}
-                className="group cursor-pointer rounded-2xl overflow-hidden bg-white border border-[#E2E8F0] shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+                className="group cursor-pointer rounded-2xl overflow-hidden bg-white border border-[#E2E8F0] shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between"
               >
                 {/* Bagian Atas: Foto Kondisi Pesisir & Badge Status */}
                 <div className="relative h-52 sm:h-56 w-full overflow-hidden bg-slate-100">
@@ -265,7 +276,7 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
 
       </div>
 
-      {/* Pop-up Modal Preview Detail Laporan Warga (Clean Light Style) */}
+      {/* Pop-up Modal Preview Detail Laporan Warga (Clean White Card) */}
       {selectedReport && (
         <div 
           className="fixed inset-0 z-[600] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xs animate-fade-in"

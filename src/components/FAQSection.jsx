@@ -12,17 +12,17 @@ export default function FAQSection() {
     },
     {
       q: 'Apakah identitas pelapor dapat dirahasiakan?',
-      a: 'Ya. Anda dapat memilih opsi pelaporan anonim pada formulir kirim laporan. Reforca menjamin kerahasiaan data pribadi masyarakat sesuai dengan prinsip perlindungan pelapor (whistleblower protection), sehingga hanya data koordinat dan kondisi fisik sampah yang ditampilkan kepada publik.',
+      a: 'Ya. Anda dapat memilih opsi pelaporan anonim pada formulir kirim laporan. Reforca menjamin kerahasiaan data pribadi masyarakat sesuai prinsip perlindungan pelapor (whistleblower protection), sehingga hanya data koordinat dan kondisi fisik sampah yang ditampilkan kepada publik.',
       icon: Shield
     },
     {
       q: 'Berapa lama laporan ditindaklanjuti oleh instansi terkait?',
-      a: 'Laporan berkategori Darurat akan segera masuk ke antrean prioritas Ruang Komando Instansi dalam waktu kurang dari 2 jam. Rata-rata pengerahan tim lapangan dan logistik pembersihan terlaksana antara 24 hingga 72 jam tergantung cuaca pasang-surut dan medan pesisir.',
+      a: 'Laporan berkategori Darurat akan segera masuk ke antrean prioritas Ruang Komando Instansi dalam waktu kurang dari 2 jam. Rata-rata pengerahan tim lapangan dan logistik pembersihan terlaksana antara 24 hingga 72 jam tergantung cuaca pasang surut dan medan pesisir.',
       icon: Clock
     },
     {
       q: 'Bagaimana cara instansi atau komunitas pemuda terhubung ke Reforca?',
-      a: 'Dinas Lingkungan Hidup kabupaten/kota, pengelola pelabuhan, serta organisasi komunitas pemuda pesisir dapat mendaftarkan akun resmi melalui Ruang Komando Instansi atau menghubungi kami melalui form kontak untuk mendapatkan akses verifikasi tugas dan validasi anggaran.',
+      a: 'Dinas Lingkungan Hidup kabupaten/kota, pengelola pelabuhan, serta organisasi komunitas pemuda pesisir dapat mendaftarkan akun resmi melalui Ruang Komando Instansi untuk mendapatkan akses verifikasi tugas dan validasi anggaran.',
       icon: Building2
     },
     {
@@ -37,12 +37,23 @@ export default function FAQSection() {
   };
 
   return (
-    <section id="faq" className="py-20 lg:py-28 bg-[#F8FAFC] border-b border-[#E2E8F0]">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <section 
+      id="faq" 
+      className="relative py-20 lg:py-28 bg-[#F8FAFC] border-b border-[#E2E8F0] overflow-hidden"
+    >
+      {/* Subtle Coastal Water Texture (Low-opacity 4% blended with #F8FAFC) */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-[0.04] mix-blend-multiply"
+        style={{
+          backgroundImage: `url('/images/underwater_sunrays.jpg')`,
+        }}
+      />
+
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Section Header */}
         <div className="text-center space-y-3" data-aos="fade-up">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFF6FF] border border-[#DBEAFE] text-[#1D4ED8] text-xs font-bold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#EFF6FF] border border-[#DBEAFE] text-[#1D4ED8] text-xs font-bold uppercase tracking-wider">
             <HelpCircle size={13} />
             <span>Informasi & Bantuan</span>
           </div>
@@ -56,7 +67,7 @@ export default function FAQSection() {
           </p>
         </div>
 
-        {/* Clean White Accordion Cards */}
+        {/* Clean White Accordion Cards: Clean White Elements (#FFFFFF) with shadow-sm */}
         <div className="space-y-3.5" data-aos="fade-up" data-aos-delay="100">
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
@@ -64,7 +75,7 @@ export default function FAQSection() {
             return (
               <div
                 key={index}
-                className="rounded-2xl border border-[#E2E8F0] bg-white shadow-xs transition-all duration-200 overflow-hidden"
+                className="rounded-2xl border border-[#E2E8F0] bg-white shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
               >
                 <button
                   type="button"
