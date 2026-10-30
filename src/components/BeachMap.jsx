@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { 
-  MapPin, 
-  AlertTriangle, 
-  Layers, 
-  Compass, 
-  Filter, 
-  TrendingUp, 
-  CheckCircle2, 
-  Clock, 
+import {
+  MapPin,
+  AlertTriangle,
+  Layers,
+  Compass,
+  Filter,
+  TrendingUp,
+  CheckCircle2,
+  Clock,
   ChevronRight,
   Maximize2
 } from 'lucide-react';
@@ -21,7 +21,6 @@ export default function BeachMap({ reports, onSelectReport, activeReportId }) {
 
   const [urgencyFilter, setUrgencyFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const [mapTheme, setMapTheme] = useState('dark'); // 'dark' or 'satellite'
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Filtered reports
@@ -46,10 +45,10 @@ export default function BeachMap({ reports, onSelectReport, activeReportId }) {
 
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-      // Tile Layer: CartoDB Dark Matter
-      const darkTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      // Tile Layer: OpenStreetMap Standard (100% Gratis & Tanpa API Key)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        subdomains: 'abcd'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
 
       mapInstanceRef.current = map;
@@ -183,7 +182,7 @@ export default function BeachMap({ reports, onSelectReport, activeReportId }) {
   };
 
   return (
-    <div className={`relative w-full rounded-2xl overflow-hidden border border-teal-500/30 shadow-2xl transition-all duration-300 ${isExpanded ? 'h-[620px]' : 'h-[460px] md:h-[520px]'}`}>
+    <div className={`relative w-full rounded-2xl overflow-hidden border border-teal-500/35 shadow-2xl transition-all duration-300 ${isExpanded ? 'h-[620px]' : 'h-[460px] md:h-[520px]'}`}>
       {/* Top Floating Controls Bar */}
       <div className="absolute top-4 left-4 right-4 z-[400] flex flex-wrap items-center justify-between gap-2 pointer-events-none">
         {/* Left: Filter Pills */}
@@ -197,17 +196,16 @@ export default function BeachMap({ reports, onSelectReport, activeReportId }) {
             <button
               key={urgency}
               onClick={() => setUrgencyFilter(urgency)}
-              className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-all ${
-                urgencyFilter === urgency
-                  ? urgency === 'Darurat'
-                    ? 'bg-rose-500 text-white font-bold shadow-glow-rose'
-                    : urgency === 'Tinggi'
+              className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-all ${urgencyFilter === urgency
+                ? urgency === 'Darurat'
+                  ? 'bg-rose-500 text-white font-bold shadow-glow-rose'
+                  : urgency === 'Tinggi'
                     ? 'bg-amber-500 text-slate-950 font-bold'
                     : urgency === 'Sedang'
-                    ? 'bg-cyan-500 text-slate-950 font-bold'
-                    : 'bg-teal-500 text-slate-950 font-bold'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-              }`}
+                      ? 'bg-cyan-500 text-slate-950 font-bold'
+                      : 'bg-teal-500 text-slate-950 font-bold'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                }`}
             >
               {urgency === 'ALL' ? 'Semua' : urgency}
             </button>

@@ -1,25 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  X, 
-  PlusCircle, 
-  LogIn, 
-  UserPlus, 
-  CheckCircle2, 
-  ShieldAlert, 
-  User, 
-  Phone, 
-  Mail, 
-  Lock, 
+import {
+  X,
+  PlusCircle,
+  LogIn,
+  UserPlus,
+  CheckCircle2,
+  ShieldAlert,
+  User,
+  Phone,
+  Mail,
+  Lock,
   Sparkles,
   LogOut
 } from 'lucide-react';
 import PublicReportForm from './PublicReportForm';
+import { loginWithGoogle } from '../services/authService';
 
-export default function CreateReportModal({ 
-  isOpen, 
-  onClose, 
-  onSubmitReport, 
-  currentUser, 
+export default function CreateReportModal({
+  isOpen,
+  onClose,
+  onSubmitReport,
+  currentUser,
   onLoginSuccess,
   onLogout,
   initialTab = 'report'
@@ -41,12 +42,12 @@ export default function CreateReportModal({
       setActiveTab(initialTab === 'login' ? 'login' : 'report');
     }
   }
-  
+
   // Login Form State
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  
+
   // Register Form State
   const [regName, setRegName] = useState('');
   const [regPhone, setRegPhone] = useState('');
@@ -71,6 +72,28 @@ export default function CreateReportModal({
 
   if (!isOpen) return null;
 
+  // Handle Google Login Integration
+  const handleGoogleAuth = async () => {
+    try {
+      setLoginError('');
+      setRegError('');
+      const userData = await loginWithGoogle();
+
+      setAuthSuccessMessage(`Berhasil masuk dengan Google, selamat datang ${userData.name}!`);
+      setTimeout(() => {
+        if (onLoginSuccess) {
+          onLoginSuccess(userData);
+        }
+        setActiveTab('report');
+        setAuthSuccessMessage('');
+      }, 700);
+    } catch (error) {
+      console.error("Google Auth Error:", error);
+      setLoginError('Gagal masuk dengan Google. Pastikan popup tidak diblokir browser.');
+      setRegError('Gagal masuk dengan Google. Pastikan popup tidak diblokir browser.');
+    }
+  };
+
   // Handle Login
   const handleLoginSubmit = (e) => {
     e.preventDefault();
@@ -81,7 +104,6 @@ export default function CreateReportModal({
       return;
     }
 
-    // Check stored registered users
     const registeredUsers = JSON.parse(localStorage.getItem('reforca_registered_users') || '[]');
     const foundUser = registeredUsers.find(
       (u) => u.email.toLowerCase() === loginEmail.toLowerCase() && u.password === loginPassword
@@ -92,7 +114,6 @@ export default function CreateReportModal({
     if (foundUser) {
       loggedInUser = foundUser;
     } else {
-      // Default citizen login
       const fallbackName = loginEmail.split('@')[0].replace(/[._]/g, ' ') || 'Warga Pesisir';
       const capitalizedName = fallbackName
         .split(' ')
@@ -139,7 +160,6 @@ export default function CreateReportModal({
       createdAt: new Date().toISOString()
     };
 
-    // Save to localStorage registered users
     const existing = JSON.parse(localStorage.getItem('reforca_registered_users') || '[]');
     existing.push(newUser);
     localStorage.setItem('reforca_registered_users', JSON.stringify(existing));
@@ -155,7 +175,6 @@ export default function CreateReportModal({
     }, 800);
   };
 
-  // Quick autofill demo citizen account
   const autofillDemoWarga = () => {
     setLoginEmail('bambang@gmail.com');
     setLoginPassword('password123');
@@ -167,13 +186,13 @@ export default function CreateReportModal({
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-[650] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-xs animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
-      <div 
+      <div
         className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-2xl bg-white border border-[#E2E8F0] shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
@@ -185,11 +204,10 @@ export default function CreateReportModal({
                 <button
                   type="button"
                   onClick={() => setActiveTab('report')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    activeTab === 'report'
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${activeTab === 'report'
                       ? 'bg-white text-[#1D4ED8] shadow-xs border border-[#CBD5E1]'
                       : 'text-[#64748B] hover:text-[#0F172A]'
-                  }`}
+                    }`}
                 >
                   <PlusCircle size={14} className={activeTab === 'report' ? 'text-[#1D4ED8]' : 'text-[#64748B]'} />
                   <span>Buat Laporan Bahari</span>
@@ -197,11 +215,10 @@ export default function CreateReportModal({
                 <button
                   type="button"
                   onClick={() => setActiveTab('login')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    activeTab === 'login'
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${activeTab === 'login'
                       ? 'bg-white text-[#1D4ED8] shadow-xs border border-[#CBD5E1]'
                       : 'text-[#64748B] hover:text-[#0F172A]'
-                  }`}
+                    }`}
                 >
                   <User size={14} className="text-[#1D4ED8]" />
                   <span>Profil Akun</span>
@@ -212,11 +229,10 @@ export default function CreateReportModal({
                 <button
                   type="button"
                   onClick={() => setActiveTab('login')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    activeTab === 'login'
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${activeTab === 'login'
                       ? 'bg-white text-[#1D4ED8] shadow-xs border border-[#CBD5E1]'
                       : 'text-[#64748B] hover:text-[#0F172A]'
-                  }`}
+                    }`}
                 >
                   <LogIn size={14} className={activeTab === 'login' ? 'text-[#1D4ED8]' : 'text-[#64748B]'} />
                   <span>Masuk Akun</span>
@@ -224,11 +240,10 @@ export default function CreateReportModal({
                 <button
                   type="button"
                   onClick={() => setActiveTab('register')}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    activeTab === 'register'
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${activeTab === 'register'
                       ? 'bg-white text-[#1D4ED8] shadow-xs border border-[#CBD5E1]'
                       : 'text-[#64748B] hover:text-[#0F172A]'
-                  }`}
+                    }`}
                 >
                   <UserPlus size={14} className={activeTab === 'register' ? 'text-[#1D4ED8]' : 'text-[#64748B]'} />
                   <span>Daftar Akun Baru</span>
@@ -266,8 +281,8 @@ export default function CreateReportModal({
 
         {/* Modal Content */}
         <div className="p-4 sm:p-6">
-          
-          {/* JIKA BELUM LOGIN DAN MEMILIH TAB REPORT: TAMPILKAN GATEWAY LOGIN WAJIB */}
+
+          {/* JIKA BELUM LOGIN DAN MEMILIH TAB REPORT */}
           {activeTab === 'report' && !currentUser && (
             <div className="max-w-md mx-auto py-6 space-y-6 animate-fade-in">
               <div className="p-4 rounded-2xl bg-[#EFF6FF] border border-[#BFDBFE] text-[#1E40AF] space-y-2">
@@ -293,7 +308,7 @@ export default function CreateReportModal({
                   className="py-3 px-4 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all"
                 >
                   <LogIn size={15} />
-                  <span>Masuk Akun</span>
+                  <span>Masuk Email</span>
                 </button>
                 <button
                   type="button"
@@ -301,9 +316,24 @@ export default function CreateReportModal({
                   className="py-3 px-4 rounded-xl bg-white hover:bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all"
                 >
                   <UserPlus size={15} className="text-[#1D4ED8]" />
-                  <span>Daftar Akun Baru</span>
+                  <span>Daftar Baru</span>
                 </button>
               </div>
+
+              {/* Tombol Login Google Cepat di Gate */}
+              <button
+                type="button"
+                onClick={handleGoogleAuth}
+                className="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xs transition-all hover:scale-[1.01]"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" />
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.18v3.14C3.15 21.32 7.22 24 12 24z" />
+                  <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.62H1.18C.43 8.13 0 9.87 0 12s.43 3.87 1.18 5.38l4.09-3.14z" />
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.22 0 3.15 2.68 1.18 6.62l4.09 3.14c.95-2.85 3.6-4.96 6.73-4.96z" />
+                </svg>
+                <span>Masuk dengan Google</span>
+              </button>
 
               {/* Demo Quick Login Helper */}
               <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-2 text-xs">
@@ -327,7 +357,7 @@ export default function CreateReportModal({
             </div>
           )}
 
-          {/* JIKA SUDAH LOGIN & TAB REPORT: TAMPILKAN FORMULIR PELAPORAN */}
+          {/* JIKA SUDAH LOGIN & TAB REPORT */}
           {activeTab === 'report' && currentUser && (
             <div className="space-y-4 animate-fade-in">
               <div className="text-center space-y-1 mb-2">
@@ -339,9 +369,8 @@ export default function CreateReportModal({
                 </p>
               </div>
 
-              {/* Form Laporan Lengkap dengan currentUser */}
-              <PublicReportForm 
-                onSubmitReport={handleFormSubmit} 
+              <PublicReportForm
+                onSubmitReport={handleFormSubmit}
                 currentUser={currentUser}
               />
             </div>
@@ -350,8 +379,7 @@ export default function CreateReportModal({
           {/* TAB MASUK AKUN (LOGIN) */}
           {activeTab === 'login' && (
             <div className="max-w-md mx-auto py-4 space-y-6 animate-fade-in">
-              
-              {/* Profile Overview if already logged in */}
+
               {currentUser ? (
                 <div className="p-6 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-4 text-center">
                   <div className="w-16 h-16 rounded-full bg-[#1D4ED8] text-white flex items-center justify-center font-bold text-xl mx-auto shadow-md">
@@ -384,7 +412,6 @@ export default function CreateReportModal({
                   </div>
                 </div>
               ) : (
-                /* Form Login Warga */
                 <>
                   <div className="text-center space-y-1.5">
                     <div className="w-12 h-12 rounded-2xl bg-[#EFF6FF] border border-[#DBEAFE] text-[#1D4ED8] flex items-center justify-center mx-auto shadow-xs">
@@ -406,49 +433,74 @@ export default function CreateReportModal({
                       </div>
                     </div>
                   ) : (
-                    <form onSubmit={handleLoginSubmit} className="space-y-4">
-                      
+                    <div className="space-y-4">
+
                       {loginError && (
                         <div className="p-3 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-xs font-semibold text-[#DC2626]">
                           {loginError}
                         </div>
                       )}
 
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-[#334155] flex items-center gap-1.5">
-                          <Mail size={13} className="text-[#1D4ED8]" />
-                          <span>Alamat Email</span>
-                        </label>
-                        <input
-                          type="email"
-                          required
-                          value={loginEmail}
-                          onChange={(e) => setLoginEmail(e.target.value)}
-                          placeholder="warga@gmail.com"
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:bg-white"
-                        />
+                      {/* Form Login Email Manual */}
+                      <form onSubmit={handleLoginSubmit} className="space-y-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-[#334155] flex items-center gap-1.5">
+                            <Mail size={13} className="text-[#1D4ED8]" />
+                            <span>Alamat Email</span>
+                          </label>
+                          <input
+                            type="email"
+                            required
+                            value={loginEmail}
+                            onChange={(e) => setLoginEmail(e.target.value)}
+                            placeholder="warga@gmail.com"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:bg-white"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-[#334155] flex items-center gap-1.5">
+                            <Lock size={13} className="text-[#1D4ED8]" />
+                            <span>Kata Sandi</span>
+                          </label>
+                          <input
+                            type="password"
+                            required
+                            value={loginPassword}
+                            onChange={(e) => setLoginPassword(e.target.value)}
+                            placeholder="••••••••"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:bg-white"
+                          />
+                        </div>
+
+                        <button
+                          type="submit"
+                          className="w-full py-3 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-xs shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99]"
+                        >
+                          Masuk dengan Email
+                        </button>
+                      </form>
+
+                      {/* Pembatas / Divider */}
+                      <div className="flex items-center my-3">
+                        <div className="flex-1 border-t border-slate-200"></div>
+                        <span className="px-3 text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Atau masuk dengan</span>
+                        <div className="flex-1 border-t border-slate-200"></div>
                       </div>
 
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-medium text-[#334155] flex items-center gap-1.5">
-                          <Lock size={13} className="text-[#1D4ED8]" />
-                          <span>Kata Sandi</span>
-                        </label>
-                        <input
-                          type="password"
-                          required
-                          value={loginPassword}
-                          onChange={(e) => setLoginPassword(e.target.value)}
-                          placeholder="••••••••"
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:bg-white"
-                        />
-                      </div>
-
+                      {/* Tombol Google Sign In di Bawah */}
                       <button
-                        type="submit"
-                        className="w-full py-3 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-xs shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99]"
+                        type="button"
+                        onClick={handleGoogleAuth}
+                        className="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xs transition-all hover:scale-[1.01]"
                       >
-                        Masuk & Lanjutkan
+                        <svg className="w-4 h-4" viewBox="0 0 24 24">
+                          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" />
+                          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.18v3.14C3.15 21.32 7.22 24 12 24z" />
+                          <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.62H1.18C.43 8.13 0 9.87 0 12s.43 3.87 1.18 5.38l4.09-3.14z" />
+                          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.22 0 3.15 2.68 1.18 6.62l4.09 3.14c.95-2.85 3.6-4.96 6.73-4.96z" />
+                        </svg>
+                        <span>Masuk dengan Google</span>
                       </button>
 
                       {/* Demo Quickfill */}
@@ -473,7 +525,7 @@ export default function CreateReportModal({
                         </button>
                       </div>
 
-                    </form>
+                    </div>
                   )}
                 </>
               )}
@@ -504,79 +556,104 @@ export default function CreateReportModal({
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
-                  
+                <div className="space-y-4">
+
                   {regError && (
                     <div className="p-3 rounded-xl bg-[#FEE2E2] border border-[#FECACA] text-xs font-semibold text-[#DC2626]">
                       {regError}
                     </div>
                   )}
 
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-[#334155] flex items-center gap-1.5">
-                      <User size={13} className="text-[#1D4ED8]" />
-                      <span>Nama Lengkap Pelapor</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={regName}
-                      onChange={(e) => setRegName(e.target.value)}
-                      placeholder="Contoh: Rian Saputra"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:bg-white"
-                    />
+                  {/* Form Pendaftaran Manual */}
+                  <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-[#334155] flex items-center gap-1.5">
+                        <User size={13} className="text-[#1D4ED8]" />
+                        <span>Nama Lengkap Pelapor</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={regName}
+                        onChange={(e) => setRegName(e.target.value)}
+                        placeholder="Contoh: Rian Saputra"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-[#334155] flex items-center gap-1.5">
+                        <Phone size={13} className="text-[#1D4ED8]" />
+                        <span>Nomor WhatsApp / HP</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={regPhone}
+                        onChange={(e) => setRegPhone(e.target.value)}
+                        placeholder="Contoh: +62 813-9876-5432"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-[#334155] flex items-center gap-1.5">
+                        <Mail size={13} className="text-[#1D4ED8]" />
+                        <span>Alamat Email</span>
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={regEmail}
+                        onChange={(e) => setRegEmail(e.target.value)}
+                        placeholder="rian@gmail.com"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:bg-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-[#334155] flex items-center gap-1.5">
+                        <Lock size={13} className="text-[#1D4ED8]" />
+                        <span>Kata Sandi</span>
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                        placeholder="Minimal 6 karakter"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:bg-white"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-3 mt-2 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-xs shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99]"
+                    >
+                      Daftar & Lanjut Kirim Laporan
+                    </button>
+                  </form>
+
+                  {/* Pembatas / Divider */}
+                  <div className="flex items-center my-3">
+                    <div className="flex-1 border-t border-slate-200"></div>
+                    <span className="px-3 text-[11px] text-slate-400 uppercase tracking-wider font-semibold">Atau daftar dengan</span>
+                    <div className="flex-1 border-t border-slate-200"></div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-[#334155] flex items-center gap-1.5">
-                      <Phone size={13} className="text-[#1D4ED8]" />
-                      <span>Nomor WhatsApp / HP</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={regPhone}
-                      onChange={(e) => setRegPhone(e.target.value)}
-                      placeholder="Contoh: +62 813-9876-5432"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:bg-white"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-[#334155] flex items-center gap-1.5">
-                      <Mail size={13} className="text-[#1D4ED8]" />
-                      <span>Alamat Email</span>
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={regEmail}
-                      onChange={(e) => setRegEmail(e.target.value)}
-                      placeholder="rian@gmail.com"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:bg-white"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-[#334155] flex items-center gap-1.5">
-                      <Lock size={13} className="text-[#1D4ED8]" />
-                      <span>Kata Sandi</span>
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                      placeholder="Minimal 6 karakter"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs text-[#0F172A] placeholder-slate-400 focus:outline-none focus:border-[#1D4ED8] focus:bg-white"
-                    />
-                  </div>
-
+                  {/* Tombol Google Sign In di Bawah */}
                   <button
-                    type="submit"
-                    className="w-full py-3 mt-2 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-xs shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99]"
+                    type="button"
+                    onClick={handleGoogleAuth}
+                    className="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xs transition-all hover:scale-[1.01]"
                   >
-                    Daftar & Lanjut Kirim Laporan
+                    <svg className="w-4 h-4" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" />
+                      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.13 0-5.78-2.11-6.73-4.96H1.18v3.14C3.15 21.32 7.22 24 12 24z" />
+                      <path fill="#FBBC05" d="M5.27 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.62H1.18C.43 8.13 0 9.87 0 12s.43 3.87 1.18 5.38l4.09-3.14z" />
+                      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.22 0 3.15 2.68 1.18 6.62l4.09 3.14c.95-2.85 3.6-4.96 6.73-4.96z" />
+                    </svg>
+                    <span>Daftar Cepat dengan Google</span>
                   </button>
 
                   <div className="text-center pt-2">
@@ -589,7 +666,7 @@ export default function CreateReportModal({
                     </button>
                   </div>
 
-                </form>
+                </div>
               )}
             </div>
           )}

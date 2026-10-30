@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import { 
-  ArrowUp, 
-  CheckCircle, 
-  X, 
-  Info 
+import {
+  ArrowUp,
+  CheckCircle,
+  X,
+  Info
 } from 'lucide-react';
 
 import Navbar from './components/Navbar';
@@ -20,20 +20,16 @@ import Footer from './components/Footer';
 import CreateReportModal from './components/CreateReportModal';
 import AdminDashboard from './components/AdminDashboard';
 
-import { INITIAL_REPORTS } from './data/mockFirestore';
+import {
+  subscribeToReports,
+  seedInitialReports,
+  createReport,
+  upvoteReport as updateFirestoreVote
+} from './services/reportService';
 
 export default function App() {
-  const [reports, setReports] = useState(() => {
-    const saved = localStorage.getItem('reforca_reports_v2');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return INITIAL_REPORTS;
-      }
-    }
-    return INITIAL_REPORTS;
-  });
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Sesi akun pengguna (Warga)
   const [currentUser, setCurrentUser] = useState(() => {
@@ -72,6 +68,18 @@ export default function App() {
     });
   }, []);
 
+  // Sync Real-time Firestore Reports
+  useEffect(() => {
+    seedInitialReports(); // Auto-seed 5 data awal jika kosong
+
+    const unsubscribe = subscribeToReports((data) => {
+      setReports(data);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   // Sync route pada browser popstate
   useEffect(() => {
     const handlePopState = () => {
@@ -89,11 +97,6 @@ export default function App() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Simpan data laporan ke localStorage
-  useEffect(() => {
-    localStorage.setItem('reforca_reports_v2', JSON.stringify(reports));
-  }, [reports]);
 
   // Simpan sesi user ke localStorage
   useEffect(() => {
@@ -145,39 +148,44 @@ export default function App() {
     showToast(`Berhasil masuk sebagai ${user.name}.`, 'success');
   };
 
-  const handleAddReport = (newReport) => {
-    const reportWithUser = {
-      ...newReport,
-      reporterName: currentUser?.name || newReport.reporterName,
-      reporterContact: currentUser?.phone || newReport.reporterContact,
-      reporterEmail: currentUser?.email,
-      reporterUserId: currentUser?.id
-    };
+  const handleAddReport = async (newReport) => {
+    try {
+      const reportWithUser = {
+        ...newReport,
+        reporterName: currentUser?.name || newReport.reporterName,
+        reporterContact: currentUser?.phone || newReport.reporterContact,
+        reporterEmail: currentUser?.email,
+        reporterUserId: currentUser?.id
+      };
 
-    setReports((prev) => [reportWithUser, ...prev]);
-    showToast(`Laporan "${newReport.locationName}" berhasil diterbitkan ke sistem Reforca.`, 'success');
+      await createReport(reportWithUser);
+      showToast(`Laporan "${newReport.locationName}" berhasil diterbitkan ke sistem Cloud Firestore.`, 'success');
+    } catch (err) {
+      console.error("Gagal menambahkan laporan:", err);
+      showToast("Gagal menyimpan laporan ke database.", "error");
+    }
   };
 
-  const handleUpvote = (reportId, isIncrement) => {
-    setReports((prev) =>
-      prev.map((r) => {
-        if (r.id === reportId) {
-          const newVotes = Math.max(0, (r.votesCount || 0) + (isIncrement ? 1 : -1));
-          return { ...r, votesCount: newVotes, updatedAt: new Date().toISOString() };
-        }
-        return r;
-      })
-    );
+  const handleUpvote = async (reportId, isIncrement) => {
+    try {
+      const targetReport = reports.find(r => r.id === reportId);
+      if (!targetReport) return;
 
-    if (isIncrement) {
-      showToast('Dukungan suara berhasil dicatat untuk prioritas penanganan.', 'success');
+      const currentVotes = targetReport.votesCount || 0;
+      const newVotes = Math.max(0, currentVotes + (isIncrement ? 1 : -1));
+
+      await updateFirestoreVote(reportId, newVotes);
+
+      if (isIncrement) {
+        showToast('Dukungan suara berhasil dicatat untuk prioritas penanganan.', 'success');
+      }
+    } catch (err) {
+      console.error("Gagal melakukan upvote:", err);
     }
   };
 
   const handleUpdateReport = (updatedDoc) => {
-    setReports((prev) =>
-      prev.map((r) => (r.id === updatedDoc.id ? updatedDoc : r))
-    );
+    // Admin dashboard sudah menangani update service secara mandiri
     showToast(`Status penanganan untuk "${updatedDoc.locationName}" berhasil diperbarui.`, 'success');
   };
 
@@ -196,18 +204,17 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0F172A] text-[#0F172A] font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
-      
+
       {/* Toast Notification */}
       {toast && (
         <div className="fixed top-24 right-4 z-[9999] max-w-md animate-fade-in pointer-events-none">
           <div className="pointer-events-auto p-4 rounded-2xl bg-white border border-[#E2E8F0] text-xs shadow-xl flex items-center gap-3 text-[#0F172A]">
-            <div className={`p-2 rounded-xl ${
-              toast.type === 'info' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-[#DCFCE7] text-[#16A34A]'
-            }`}>
+            <div className={`p-2 rounded-xl ${toast.type === 'info' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-[#DCFCE7] text-[#16A34A]'
+              }`}>
               {toast.type === 'info' ? <Info size={18} /> : <CheckCircle size={18} />}
             </div>
             <p className="flex-1 leading-snug font-medium text-[#334155]">{toast.message}</p>
-            <button 
+            <button
               type="button"
               onClick={() => setToast(null)}
               className="text-slate-400 hover:text-slate-700 font-bold p-1"
@@ -219,8 +226,8 @@ export default function App() {
         </div>
       )}
 
-      {/* 1. FLOATING HEADER NAVBAR (Clean White Pill Container: HOME, FITUR, LAPORAN WARGA, FAQ, KONTAK) */}
-      <Navbar 
+      {/* 1. FLOATING HEADER NAVBAR */}
+      <Navbar
         currentUser={currentUser}
         onOpenReportModal={handleOpenReportModal}
         onOpenLoginModal={handleOpenLoginModal}
@@ -229,17 +236,17 @@ export default function App() {
 
       {currentRoute === '/' ? (
         <main className="flex-1 w-full flex flex-col">
-          
-          {/* 2. HERO SECTION (Latar Pantai & Tebing Tropis + Floating Glass Card Deep Slate Navy 85%) */}
-          <HeroSection 
+
+          {/* 2. HERO SECTION */}
+          <HeroSection
             onScrollToReports={scrollToReportsSection}
           />
 
-          {/* 3. SECTION FITUR & ALUR KERJA WEB */}
+          {/* 3. SECTION FITUR */}
           <FeaturesSection />
 
-          {/* 4. SECTION PETA INTERAKTIF & LIVE STATS */}
-          <BeachMapSection 
+          {/* 4. SECTION PETA INTERAKTIF */}
+          <BeachMapSection
             reports={reports}
             onSelectReport={(_report) => {
               scrollToReportsSection();
@@ -247,13 +254,13 @@ export default function App() {
           />
 
           {/* 5. SECTION LAPORAN WARGA */}
-          <CitizenReportsSection 
+          <CitizenReportsSection
             reports={reports}
             onUpvote={handleUpvote}
           />
 
-          {/* 6. SECTION TRANSPARANSI DATA & ANGGARAN */}
-          <TransparencyHub 
+          {/* 6. SECTION TRANSPARANSI */}
+          <TransparencyHub
             reports={reports}
           />
 
@@ -261,13 +268,13 @@ export default function App() {
           <FAQSection />
 
           {/* 8. SECTION KONTAK */}
-          <ContactSection 
+          <ContactSection
             onOpenReportModal={handleOpenReportModal}
           />
 
         </main>
       ) : (
-        /* Admin Command Center Route (Ruang Komando Instansi) */
+        /* Admin Command Center Route */
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
           <div className="flex items-center justify-between pb-4 border-b border-slate-700">
             <div>
@@ -287,7 +294,7 @@ export default function App() {
             </button>
           </div>
 
-          <AdminDashboard 
+          <AdminDashboard
             reports={reports}
             onUpdateReport={handleUpdateReport}
           />
@@ -307,10 +314,10 @@ export default function App() {
         </button>
       )}
 
-      {/* FOOTER RINGKAS */}
+      {/* FOOTER */}
       <Footer />
 
-      {/* Modal Buat Laporan & Autentikasi Pengguna */}
+      {/* Modal Buat Laporan & Autentikasi */}
       <CreateReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}

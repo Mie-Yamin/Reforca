@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { 
-  MapPin, 
-  Layers, 
-  Compass, 
-  Filter, 
+import {
+  MapPin,
+  Layers,
+  Compass,
+  Filter,
   ShieldCheck,
   Search,
   TrendingUp,
@@ -67,10 +67,10 @@ export default function BeachMapSection({ reports = [], onSelectReport }) {
 
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-      // CartoDB Positron light matter tile layer (Soft Coastal Minimalist)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      // Tile layer menggunakan OpenStreetMap 
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        subdomains: 'abcd'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
 
       mapInstanceRef.current = map;
@@ -136,9 +136,8 @@ export default function BeachMapSection({ reports = [], onSelectReport }) {
         <div class="p-2 min-w-[220px] max-w-[260px] text-[#0F172A] font-sans">
           <div class="relative h-24 rounded-lg overflow-hidden mb-2 bg-[#F8FAFC]">
             <img src="${report.photoBefore}" alt="${report.locationName}" class="w-full h-full object-cover" />
-            <span class="absolute top-1.5 left-1.5 text-[9px] font-bold px-2 py-0.5 rounded-full text-white ${
-              isCompleted ? 'bg-[#16A34A]' : isDarurat ? 'bg-[#DC2626]' : 'bg-[#D97706]'
-            }">
+            <span class="absolute top-1.5 left-1.5 text-[9px] font-bold px-2 py-0.5 rounded-full text-white ${isCompleted ? 'bg-[#16A34A]' : isDarurat ? 'bg-[#DC2626]' : 'bg-[#D97706]'
+        }">
               ${pinLabel}
             </span>
           </div>
@@ -171,12 +170,12 @@ export default function BeachMapSection({ reports = [], onSelectReport }) {
   };
 
   return (
-    <section 
-      id="peta-laporan" 
+    <section
+      id="peta-laporan"
       className="relative w-full py-16 lg:py-24 bg-white border-b border-[#E2E8F0] overflow-hidden"
     >
       {/* Subtle Coastal Sea Texture (Low-opacity 4% blended with #FFFFFF) */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center pointer-events-none opacity-[0.04] mix-blend-multiply"
         style={{
           backgroundImage: `url('/images/split_water_ocean.jpg')`,
@@ -184,7 +183,7 @@ export default function BeachMapSection({ reports = [], onSelectReport }) {
       />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        
+
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4" data-aos="fade-up">
           <div>
@@ -206,7 +205,7 @@ export default function BeachMapSection({ reports = [], onSelectReport }) {
           {liveStats.map((stat, idx) => {
             const Icon = stat.icon;
             return (
-              <div 
+              <div
                 key={idx}
                 className="p-5 sm:p-6 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm flex items-center gap-4 transition-all hover:shadow-md"
               >
@@ -231,10 +230,10 @@ export default function BeachMapSection({ reports = [], onSelectReport }) {
 
         {/* Main Grid: Interactive Map + Side Panel */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch" data-aos="fade-up" data-aos-delay="100">
-          
+
           {/* Kolom Peta Interaktif (Leaflet) */}
           <div className="lg:col-span-8 rounded-2xl overflow-hidden border border-[#E2E8F0] bg-white relative shadow-sm min-h-[480px] lg:min-h-[560px] flex flex-col">
-            
+
             {/* Top Map Floating Filter Bar */}
             <div className="absolute top-4 left-4 right-4 z-[400] flex flex-wrap items-center justify-between gap-2 pointer-events-none">
               <div className="pointer-events-auto flex items-center gap-1.5 bg-white/95 backdrop-blur-md p-1.5 rounded-xl border border-[#CBD5E1] shadow-sm">
@@ -242,20 +241,19 @@ export default function BeachMapSection({ reports = [], onSelectReport }) {
                   <Filter size={12} className="text-[#1D4ED8]" />
                   <span>Filter:</span>
                 </span>
-                
+
                 {['ALL', 'Darurat', 'Tinggi'].map((urg) => (
                   <button
                     key={urg}
                     onClick={() => setUrgencyFilter(urg)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
-                      urgencyFilter === urg
-                        ? urg === 'Darurat'
-                          ? 'bg-[#DC2626] text-white shadow-xs'
-                          : urg === 'Tinggi'
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${urgencyFilter === urg
+                      ? urg === 'Darurat'
+                        ? 'bg-[#DC2626] text-white shadow-xs'
+                        : urg === 'Tinggi'
                           ? 'bg-[#D97706] text-white shadow-xs'
                           : 'bg-[#1D4ED8] text-white shadow-xs'
-                        : 'text-[#64748B] hover:text-[#0F172A]'
-                    }`}
+                      : 'text-[#64748B] hover:text-[#0F172A]'
+                      }`}
                   >
                     {urg === 'ALL' ? 'Semua' : urg}
                   </button>
@@ -307,7 +305,7 @@ export default function BeachMapSection({ reports = [], onSelectReport }) {
 
           {/* Kolom Panel Samping: Daftar Titik Laporan Warga */}
           <div className="lg:col-span-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm p-4 sm:p-5 flex flex-col justify-between space-y-4 max-h-[560px]">
-            
+
             {/* Header Panel */}
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-[#E2E8F0]">
@@ -348,24 +346,22 @@ export default function BeachMapSection({ reports = [], onSelectReport }) {
                   <div
                     key={report.id}
                     onClick={() => handleCardClick(report)}
-                    className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                      isSelected
-                        ? 'bg-[#EFF6FF] border-[#1D4ED8] shadow-xs ring-1 ring-[#1D4ED8]'
-                        : 'bg-[#F8FAFC] border-[#E2E8F0] hover:bg-slate-100/70'
-                    }`}
+                    className={`p-3 rounded-xl border cursor-pointer transition-all ${isSelected
+                      ? 'bg-[#EFF6FF] border-[#1D4ED8] shadow-xs ring-1 ring-[#1D4ED8]'
+                      : 'bg-[#F8FAFC] border-[#E2E8F0] hover:bg-slate-100/70'
+                      }`}
                   >
                     <div className="flex items-start gap-3">
-                      <img 
-                        src={report.photoBefore} 
-                        alt={report.locationName} 
+                      <img
+                        src={report.photoBefore}
+                        alt={report.locationName}
                         className="w-14 h-14 rounded-lg object-cover shrink-0 border border-[#E2E8F0]"
                       />
                       <div className="flex-1 min-w-0 space-y-1">
                         <div className="flex items-center justify-between gap-1">
-                          <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
-                            isCompleted ? 'bg-[#DCFCE7] text-[#16A34A]' :
+                          <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${isCompleted ? 'bg-[#DCFCE7] text-[#16A34A]' :
                             isDarurat ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'
-                          }`}>
+                            }`}>
                             {isCompleted ? 'Selesai' : report.aiAnalysis?.severity || 'Darurat'}
                           </span>
                           <span className="text-[10px] text-slate-500 font-mono">

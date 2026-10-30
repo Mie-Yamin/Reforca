@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
-import { 
-  Sparkles, 
-  UploadCloud, 
-  MapPin, 
-  FileText, 
-  User, 
-  Phone, 
-  Cpu, 
-  CheckCircle2, 
+import {
+  Sparkles,
+  UploadCloud,
+  MapPin,
+  FileText,
+  User,
+  Phone,
+  Cpu,
+  CheckCircle2,
   Image as ImageIcon,
   Activity,
   ShieldCheck,
   AlertTriangle
 } from 'lucide-react';
+
+import { compressImageToBase64 } from '../utils/imageHelper';
+import { analyzeBeachWasteWithGroq } from '../services/groqVision';
 
 const PRESET_BEACHES = [
   { name: "Pesisir Muara Angke (Hutan Mangrove & Muara Kali Adem)", coords: [-6.1108, 106.7731] },
@@ -23,87 +26,89 @@ const PRESET_BEACHES = [
   { name: "Pesisir Tanjung Pasir (Muara Teluknaga)", coords: [-6.0152, 106.6789] }
 ];
 
-const PRESET_THUMBNAILS = [
-  {
-    title: "Mangrove Muara Angke",
-    url: "https://images.unsplash.com/photo-1621451537084-482c73073a0f?auto=format&fit=crop&w=1000&q=80",
-    severity: "Darurat",
-    accuracy: "97.4%",
-    area: "± 290 m²",
-    wasteTypes: ["Plastik Sekali Pakai", "Jaring Nelayan", "Styrofoam", "Tali Tambang"],
-    narrative: "ANALISIS AI VISION: Terdeteksi kerapatan sampah anorganik tinggi (>40 kg/m²) yang mengikat pneumatofora (akar napas) mangrove. Urgensi DARURAT karena berisiko mematikan tegakan mangrove dan mencemari tambak pesisir dalam 14 hari."
-  },
-  {
-    title: "Garis Pantai Marunda",
-    url: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=1000&q=80",
-    severity: "Darurat",
-    accuracy: "96.2%",
-    area: "± 480 m²",
-    wasteTypes: ["Plastik Sekali Pakai", "Limbah Tekstil", "Botol Kaca", "Styrofoam"],
-    narrative: "ANALISIS AI VISION: Penumpukan sampah domestik pesisir terbawa arus rob laut. Ditemukan pecahan kaca dan serpihan styrofoam yang membahayakan aktivitas nelayan dan anak-anak pesisir."
-  },
-  {
-    title: "Pesisir Pulau Pari",
-    url: "https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=1000&q=80",
-    severity: "Sedang",
-    accuracy: "92.8%",
-    area: "± 110 m²",
-    wasteTypes: ["Plastik Sekali Pakai", "Sedotan Plastik", "Tutup Botol", "Serpihan Foam"],
-    narrative: "ANALISIS AI VISION: Polutan mikro dan makro plastik tersebar di bibir pantai wisata. Disarankan penanganan segera menggunakan ayakan pasir pantai untuk menghindari degradasi mikroplastik."
-  }
-];
-
 export default function PublicReportForm({ onSubmitReport, currentUser }) {
   const [selectedBeach, setSelectedBeach] = useState(PRESET_BEACHES[0].name);
   const [customBeachName, setCustomBeachName] = useState('');
-  const [description, setDescription] = useState(
-    "Timbunan jaring nelayan dan kantong plastik menumpuk tebal di sela-sela akar bakau setelah pasang air laut. Nelayan setempat kesulitan menambatkan perahu dan air mulai berbau busuk."
-  );
-  const [reporterName, setReporterName] = useState(() => currentUser?.name || 'Bambang Sudirman');
-  const [reporterContact, setReporterContact] = useState(() => currentUser?.phone || currentUser?.email || '0812-8871-3321');
-  
-  const [activeThumbnailIndex, setActiveThumbnailIndex] = useState(0);
-  const [currentPhotoUrl, setCurrentPhotoUrl] = useState(PRESET_THUMBNAILS[0].url);
-  
+
+  const [description, setDescription] = useState('');
+  const [reporterName, setReporterName] = useState(() => currentUser?.name || '');
+  const [reporterContact, setReporterContact] = useState(() => currentUser?.phone || currentUser?.email || '');
+
+  const [currentPhotoUrl, setCurrentPhotoUrl] = useState('');
+
   // AI Vision Analyzer states
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(100);
-  const [aiData, setAiData] = useState(PRESET_THUMBNAILS[0]);
+  const [aiData, setAiData] = useState({
+    severity: 'Darurat',
+    accuracy: '97.4%',
+    area: '± 250 m²',
+    wasteTypes: ['Plastik Sekali Pakai', 'Limbah Domestik'],
+    narrative: 'Silakan unggah foto kondisi pesisir untuk memulai analisis AI otomatis.'
+  });
   const [isSubmittedSuccess, setIsSubmittedSuccess] = useState(false);
 
-  const handleSelectThumbnail = (index) => {
-    setActiveThumbnailIndex(index);
-    setCurrentPhotoUrl(PRESET_THUMBNAILS[index].url);
-    setAiData(PRESET_THUMBNAILS[index]);
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setIsAnalyzing(true);
+      setAnalysisProgress(30);
+
+      const compressedBase64 = await compressImageToBase64(file, 1024, 0.75);
+      setCurrentPhotoUrl(compressedBase64);
+      setAnalysisProgress(60);
+
+      const result = await analyzeBeachWasteWithGroq(compressedBase64, description || "Sampah pesisir");
+
+      setAnalysisProgress(100);
+      setAiData({
+        severity: result.severity,
+        accuracy: `${result.confidenceScore}%`,
+        area: `± ${result.estimatedVolumeM2} m²`,
+        wasteTypes: result.wasteType,
+        narrative: result.aiSummary
+      });
+    } catch (err) {
+      console.error("Gagal memproses gambar dengan Groq AI:", err);
+      alert("Gagal menganalisis foto dengan AI Vision.");
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
-  const handleRunAiAnalyzer = () => {
+  const handleRunAiAnalyzer = async () => {
+    if (!currentPhotoUrl) {
+      alert("Mohon unggah foto bukti sampah terlebih dahulu.");
+      return;
+    }
+
     setIsAnalyzing(true);
-    setAnalysisProgress(20);
+    setAnalysisProgress(30);
 
-    const interval = setInterval(() => {
-      setAnalysisProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(interval);
-          return 95;
-        }
-        return prev + 25;
-      });
-    }, 200);
-
-    setTimeout(() => {
-      clearInterval(interval);
+    try {
+      const result = await analyzeBeachWasteWithGroq(currentPhotoUrl, description || "Sampah pesisir");
       setAnalysisProgress(100);
+      setAiData({
+        severity: result.severity,
+        accuracy: `${result.confidenceScore}%`,
+        area: `± ${result.estimatedVolumeM2} m²`,
+        wasteTypes: result.wasteType,
+        narrative: result.aiSummary
+      });
+    } catch (err) {
+      console.error("Gagal menjalankan AI:", err);
+    } finally {
       setIsAnalyzing(false);
-      setAiData(PRESET_THUMBNAILS[activeThumbnailIndex]);
-    }, 1200);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!reporterName.trim() || !description.trim()) {
-      alert("Mohon lengkapi nama pelapor dan deskripsi temuan sampah.");
+    if (!reporterName.trim() || !description.trim() || !currentPhotoUrl) {
+      alert("Mohon lengkapi foto bukti, deskripsi, dan nama pelapor.");
       return;
     }
 
@@ -124,7 +129,7 @@ export default function PublicReportForm({ onSubmitReport, currentUser }) {
       aiAnalysis: {
         severity: aiData.severity,
         wasteType: aiData.wasteTypes,
-        estimatedVolumeM2: parseInt(aiData.area.replace(/[^0-9]/g, ''), 10) || 290,
+        estimatedVolumeM2: parseInt(aiData.area.replace(/[^0-9]/g, ''), 10) || 250,
         confidenceScore: parseFloat(aiData.accuracy.replace(/[^0-9.]/g, '')) || 97.4,
         aiSummary: aiData.narrative,
         recommendedActions: [
@@ -172,57 +177,44 @@ export default function PublicReportForm({ onSubmitReport, currentUser }) {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            
-            {/* KOLOM KIRI: PREVIEW FOTO, 3 THUMBNAILS & AI VISION BOX */}
-            <div className="lg:col-span-6 space-y-4">
-              
-              {/* Photo Preview Card */}
-              <div className="rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] p-4 space-y-3">
-                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider flex items-center gap-1.5">
-                  <ImageIcon size={15} className="text-[#1D4ED8]" />
-                  <span>1. Foto Bukti Sampah Pantai (Before)</span>
-                </label>
 
-                {/* Main Image View */}
-                <div className="relative rounded-xl overflow-hidden aspect-[16/10] bg-slate-100 border border-[#E2E8F0] group">
-                  <img 
-                    src={currentPhotoUrl} 
-                    alt="Bukti Sampah Pantai" 
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  
-                  <div className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-[#E2E8F0] text-[11px] font-bold text-[#1D4ED8] shadow-xs flex items-center gap-1.5">
-                    <Activity size={13} className="text-[#1D4ED8]" />
-                    <span>Resolusi Siap Analisis</span>
-                  </div>
+            {/* KOLOM KIRI: PREVIEW FOTO & AI VISION ANALYZER */}
+            <div className="lg:col-span-6 space-y-4">
+
+              <div className="rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider flex items-center gap-1.5">
+                    <ImageIcon size={15} className="text-[#1D4ED8]" />
+                    <span>1. Foto Bukti Sampah Pantai (Before)</span>
+                  </label>
+
+                  <label className="cursor-pointer px-3 py-1.5 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs">
+                    <UploadCloud size={14} />
+                    <span>Upload Foto HP</span>
+                    <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                  </label>
                 </div>
 
-                {/* 3 Foto Thumbnail Contoh Kondisi Pesisir */}
-                <div>
-                  <span className="text-[11px] text-[#64748B] block mb-1.5 font-medium">
-                    Pilih contoh foto kondisi pesisir:
-                  </span>
-                  <div className="grid grid-cols-3 gap-2">
-                    {PRESET_THUMBNAILS.map((thumb, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleSelectThumbnail(idx)}
-                        className={`p-1.5 rounded-xl border text-[11px] transition-all flex flex-col items-center gap-1 text-left ${
-                          activeThumbnailIndex === idx
-                            ? 'bg-white border-[#1D4ED8] text-[#1D4ED8] ring-1 ring-[#1D4ED8] font-bold shadow-xs'
-                            : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'
-                        }`}
-                      >
-                        <img 
-                          src={thumb.url} 
-                          alt={thumb.title} 
-                          className="w-full h-11 object-cover rounded-lg" 
-                        />
-                        <span className="line-clamp-1 text-center w-full text-[10px]">{thumb.title}</span>
-                      </button>
-                    ))}
-                  </div>
+                <div className="relative rounded-xl overflow-hidden aspect-[16/10] bg-slate-100 border border-[#E2E8F0] group flex items-center justify-center">
+                  {currentPhotoUrl ? (
+                    <img
+                      src={currentPhotoUrl}
+                      alt="Bukti Sampah Pantai"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center p-6 text-slate-400 space-y-2">
+                      <UploadCloud size={32} className="mx-auto text-slate-300" />
+                      <p className="text-xs">Belum ada foto yang diunggah. Klik tombol "Upload Foto HP" di atas.</p>
+                    </div>
+                  )}
+
+                  {currentPhotoUrl && (
+                    <div className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-[#E2E8F0] text-[11px] font-bold text-[#1D4ED8] shadow-xs flex items-center gap-1.5">
+                      <Activity size={13} className="text-[#1D4ED8]" />
+                      <span>Resolusi Siap Analisis</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -238,14 +230,14 @@ export default function PublicReportForm({ onSubmitReport, currentUser }) {
                         Verifikasi AI Reforca
                       </h4>
                       <p className="text-[10px] text-[#64748B]">
-                        Model inferensi visi estimasi polutan
+                        Model inferensi visi Groq Llama 3.2
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FEE2E2] border border-[#FECACA] text-[#DC2626] text-[11px] font-bold">
                     <AlertTriangle size={12} />
-                    <span>Darurat (97.4% Akurasi)</span>
+                    <span>{aiData.severity} ({aiData.accuracy})</span>
                   </div>
                 </div>
 
@@ -256,14 +248,14 @@ export default function PublicReportForm({ onSubmitReport, currentUser }) {
                   className="w-full py-2.5 px-4 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70"
                 >
                   <Sparkles size={14} className={isAnalyzing ? 'animate-spin' : ''} />
-                  <span>{isAnalyzing ? 'Memindai Citra Satelit & Visi...' : 'Uji Analisis AI'}</span>
+                  <span>{isAnalyzing ? 'Memindai dengan Groq AI Vision...' : 'Uji Analisis AI Nyata'}</span>
                 </button>
 
                 {isAnalyzing && (
                   <div className="space-y-1">
                     <div className="w-full bg-[#DBEAFE] rounded-full h-1.5 overflow-hidden">
-                      <div 
-                        className="bg-[#1D4ED8] h-1.5 rounded-full transition-all duration-300" 
+                      <div
+                        className="bg-[#1D4ED8] h-1.5 rounded-full transition-all duration-300"
                         style={{ width: `${analysisProgress}%` }}
                       ></div>
                     </div>
@@ -273,7 +265,7 @@ export default function PublicReportForm({ onSubmitReport, currentUser }) {
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="p-2.5 rounded-xl bg-white border border-[#DBEAFE]">
                     <span className="text-[10px] text-[#64748B] block">Luas Area:</span>
-                    <span className="font-bold text-[#1D4ED8]">± 290 m²</span>
+                    <span className="font-bold text-[#1D4ED8]">{aiData.area}</span>
                   </div>
                   <div className="p-2.5 rounded-xl bg-white border border-[#DBEAFE]">
                     <span className="text-[10px] text-[#64748B] block">Kerapatan:</span>
@@ -295,10 +287,9 @@ export default function PublicReportForm({ onSubmitReport, currentUser }) {
 
             {/* KOLOM KANAN: FIELD INPUT LOKASI, DESKRIPSI & KONTAK */}
             <div className="lg:col-span-6 space-y-4">
-              
+
               <div className="rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] p-5 space-y-4">
-                
-                {/* Field 2: Lokasi */}
+
                 <div>
                   <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                     <MapPin size={14} className="text-[#1D4ED8]" />
@@ -327,7 +318,6 @@ export default function PublicReportForm({ onSubmitReport, currentUser }) {
                   )}
                 </div>
 
-                {/* Field 3: Deskripsi */}
                 <div>
                   <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                     <FileText size={14} className="text-[#1D4ED8]" />
@@ -335,7 +325,7 @@ export default function PublicReportForm({ onSubmitReport, currentUser }) {
                   </label>
                   <textarea
                     rows={4}
-                    placeholder="Deskripsikan kondisi timbunan sampah, jenis polutan, atau dampaknya terhadap nelayan..."
+                    placeholder="Tuliskan deskripsi kondisi timbunan sampah, jenis polutan, atau dampaknya secara manual di sini..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="w-full bg-white border border-[#E2E8F0] focus:border-[#1D4ED8] rounded-xl p-3 text-xs sm:text-sm text-[#0F172A] placeholder-slate-400 outline-none transition-colors resize-none leading-relaxed"
@@ -343,7 +333,6 @@ export default function PublicReportForm({ onSubmitReport, currentUser }) {
                   ></textarea>
                 </div>
 
-                {/* Field 4: Pelapor & Kontak */}
                 <div className="space-y-3 pt-1">
                   {currentUser && (
                     <div className="p-3 rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] flex items-center justify-between text-xs text-[#1E40AF]">
@@ -364,7 +353,7 @@ export default function PublicReportForm({ onSubmitReport, currentUser }) {
                     </label>
                     <input
                       type="text"
-                      placeholder="Contoh: Bambang Sudirman"
+                      placeholder="Masukkan nama lengkap Anda..."
                       value={reporterName}
                       onChange={(e) => setReporterName(e.target.value)}
                       className="w-full bg-white border border-[#E2E8F0] focus:border-[#1D4ED8] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#0F172A] outline-none transition-colors"
@@ -379,7 +368,7 @@ export default function PublicReportForm({ onSubmitReport, currentUser }) {
                     </label>
                     <input
                       type="text"
-                      placeholder="Contoh: 0812-8871-3321"
+                      placeholder="Contoh: 0812-3456-7890"
                       value={reporterContact}
                       onChange={(e) => setReporterContact(e.target.value)}
                       className="w-full bg-white border border-[#E2E8F0] focus:border-[#1D4ED8] rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-[#0F172A] outline-none transition-colors"
