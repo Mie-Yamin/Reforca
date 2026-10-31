@@ -58,3 +58,30 @@
   background: #94A3B8;
 }
 
+/* Antigravity Floating Keyframes & Glow Aura */
+@keyframes antigravity-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+@keyframes aura-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.45), 0 8px 25px -4px rgba(29, 78, 216, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 26px rgba(6, 182, 212, 0.8), 0 14px 35px -4px rgba(29, 78, 216, 0.75);
+  }
+}
+
+.animate-antigravity {
+  animation: antigravity-float 3.5s ease-in-out infinite;
+}
+
+.animate-aura-glow {
+  animation: aura-glow 3s ease-in-out infinite;
+}
+

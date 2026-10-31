@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import {
-  ArrowUp,
   CheckCircle,
   X,
   Info
@@ -20,6 +19,7 @@ import Footer from './components/Footer';
 import CreateReportModal from './components/CreateReportModal';
 import AdminDashboard from './components/AdminDashboard';
 import AdminLogin from './components/AdminLogin';
+import FloatingChatBot from './components/FloatingChatBot';
 
 import { getAdminSession, logoutAdmin } from './services/adminAuthService';
 
@@ -60,7 +60,6 @@ export default function App() {
   });
 
   const [toast, setToast] = useState(null);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [modalInitialTab, setModalInitialTab] = useState('report');
 
@@ -93,15 +92,6 @@ export default function App() {
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  // Show/Hide Floating Scroll To Top button
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 400);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Simpan sesi user ke localStorage
@@ -357,16 +347,8 @@ export default function App() {
         <ContactSection onOpenReportModal={handleOpenReportModal} />
       </main>
 
-      {/* Floating Scroll To Top Button */}
-      {showScrollTop && (
-        <button
-          type="button"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-6 right-6 z-[450] p-3 rounded-full bg-[#1D4ED8] hover:bg-[#1E40AF] text-white font-bold shadow-lg transition-all hover:scale-110 active:scale-95"
-        >
-          <ArrowUp size={18} />
-        </button>
-      )}
+      {/* Floating AI Chatbot Widget (Pengganti Scroll to Top) */}
+      <FloatingChatBot />
 
       <Footer onNavigate={handleNavigate} />
 
