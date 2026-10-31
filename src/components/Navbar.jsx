@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Plus, LogIn, LogOut } from 'lucide-react';
+import { Menu, X, Plus, LogIn, LogOut, ShieldCheck } from 'lucide-react';
 import OrcaLogo from './OrcaLogo';
 
 export default function Navbar({
   onOpenReportModal,
   currentUser,
+  adminUser,
   onOpenLoginModal,
-  onLogout
+  onLogout,
+  onNavigate,
+  currentRoute = '/'
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -31,6 +34,26 @@ export default function Navbar({
 
   const scrollToSection = (sectionId) => {
     setIsMobileMenuOpen(false);
+    if (currentRoute !== '/') {
+      if (onNavigate) onNavigate('/');
+      setTimeout(() => {
+        if (sectionId === 'beranda') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+        const element = document.getElementById(sectionId);
+        if (element) {
+          const navOffset = 90;
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - navOffset;
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
+      return;
+    }
     if (sectionId === 'beranda') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -137,6 +160,23 @@ export default function Navbar({
                 </button>
               )}
 
+              {/* Admin Portal Button */}
+              {adminUser ? (
+                <button
+                  type="button"
+                  onClick={() => onNavigate && onNavigate('/admin')}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    currentRoute === '/admin'
+                      ? 'bg-cyan-500/20 text-cyan-800 border border-cyan-400'
+                      : 'bg-slate-100 hover:bg-cyan-50 text-slate-700 hover:text-cyan-700 border border-slate-200'
+                  }`}
+                  title="Akses Ruang Komando Dinas Lingkungan Hidup"
+                >
+                  <ShieldCheck size={14} className="text-cyan-600" />
+                  <span className="hidden xl:inline">Ruang Komando</span>
+                </button>
+              ) : null}
+
               {/* Pill-shaped primary action button: + Buat Laporan */}
               <button
                 type="button"
@@ -230,6 +270,23 @@ export default function Navbar({
               >
                 <Plus size={16} className="stroke-[2.5]" />
                 <span>Buat Laporan</span>
+              </button>
+
+              {/* Tautan Portal Admin di Mobile */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  if (onNavigate) onNavigate('/admin');
+                }}
+                className={`w-full py-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-colors ${
+                  adminUser
+                    ? 'bg-cyan-50 text-cyan-800 border-cyan-200'
+                    : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+                }`}
+              >
+                <ShieldCheck size={15} className="text-cyan-600" />
+                <span>{adminUser ? 'Ruang Komando (DLH)' : 'Portal Admin Kedinasan'}</span>
               </button>
             </div>
           </div>

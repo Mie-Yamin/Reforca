@@ -125,9 +125,14 @@ VITE_FIREBASE_APP_ID="1:636611095333:web:..."
 
 # Konfigurasi Groq Cloud Vision AI
 VITE_GROQ_API_KEY="gsk_..."
+
+# Autentikasi Ruang Komando Admin (/admin)
+# Whitelist email admin (dapat diisi lebih dari satu email, dipisahkan koma)
+VITE_ADMIN_EMAILS="admin@reforca.id"
+VITE_ADMIN_PASSWORD="adminreforca2026"
 ```
 
-> 💡 *Catatan: Jika kredensial Firebase belum terhubung, aplikasi akan secara mulus menggunakan penyimpanan lokal (`localStorage`) dan dataset pesisir terintegrasi.*
+> 💡 *Catatan: Halaman Ruang Komando (`/admin`) diproteksi dengan verifikasi whitelist email. Hanya email yang terdaftar di `VITE_ADMIN_EMAILS` yang dapat masuk ke dashboard instansi Dinas Lingkungan Hidup.*
 
 ### 5. Jalankan Server Pengembangan
 ```bash

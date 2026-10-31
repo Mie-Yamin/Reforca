@@ -1,7 +1,8 @@
 import React from 'react';
+import { ShieldCheck } from 'lucide-react';
 import OrcaLogo from './OrcaLogo';
 
-export default function Footer() {
+export default function Footer({ onNavigate }) {
   return (
     <footer className="w-full bg-[#0F172A] border-t border-slate-800 text-slate-400 text-xs py-10 sm:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -14,9 +15,21 @@ export default function Footer() {
             <OrcaLogo invert={true} className="h-11 sm:h-13 md:h-14 w-auto object-contain" />
           </div>
 
-          {/* Teks Hak Cipta (Copyright) */}
-          <div className="text-slate-400 text-xs font-normal">
-            &copy; 2026 Reforca (Report For Care). Hak Cipta Dilindungi.
+          {/* Teks Hak Cipta (Copyright) & Admin Access Link */}
+          <div className="flex flex-col sm:flex-row items-center gap-3 text-slate-400 text-xs font-normal">
+            <span>&copy; 2026 Reforca (Report For Care). Hak Cipta Dilindungi.</span>
+            <span className="hidden sm:inline text-slate-700">•</span>
+            {onNavigate && (
+              <button
+                type="button"
+                onClick={() => onNavigate('/admin')}
+                className="inline-flex items-center gap-1.5 text-slate-500 hover:text-cyan-400 transition-colors text-xs font-semibold px-2 py-0.5 rounded-lg hover:bg-slate-800/60"
+                title="Akses Portal Khusus Admin Dinas Lingkungan Hidup"
+              >
+                <ShieldCheck size={13} className="text-cyan-500" />
+                <span>Portal Kedinasan (Admin)</span>
+              </button>
+            )}
           </div>
 
           {/* Ikon Tautan Media Sosial Minimalis */}
