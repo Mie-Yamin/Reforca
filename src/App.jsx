@@ -27,6 +27,7 @@ import {
   subscribeToReports,
   seedInitialReports,
   createReport,
+  updateReportStatus,
   upvoteReport as updateFirestoreVote
 } from './services/reportService';
 
@@ -172,8 +173,9 @@ export default function App() {
         reporterUserId: currentUser?.id
       };
 
-      await createReport(reportWithUser);
-      showToast(`Laporan "${newReport.locationName}" berhasil diterbitkan ke sistem Cloud Firestore.`, 'success');
+      const saved = await createReport(reportWithUser);
+      setReports((prev) => [saved, ...prev.filter((r) => r.id !== saved.id)]);
+      showToast(`Laporan "${newReport.locationName}" berhasil diterbitkan & langsung tersambung ke Ruang Komando Admin.`, 'success');
     } catch (err) {
       console.error("Gagal menambahkan laporan:", err);
       showToast("Gagal menyimpan laporan ke database.", "error");
@@ -198,8 +200,17 @@ export default function App() {
     }
   };
 
-  const handleUpdateReport = (updatedDoc) => {
-    showToast(`Status penanganan untuk "${updatedDoc.locationName}" berhasil diperbarui.`, 'success');
+  const handleUpdateReport = async (updatedDoc) => {
+    try {
+      await updateReportStatus(updatedDoc.id, updatedDoc);
+      setReports((prev) =>
+        prev.map((r) => (r.id === updatedDoc.id ? { ...r, ...updatedDoc } : r))
+      );
+      showToast(`Status penanganan untuk "${updatedDoc.locationName}" berhasil diperbarui ke "${updatedDoc.status}".`, 'success');
+    } catch (err) {
+      console.error("Gagal memperbarui status laporan:", err);
+      showToast("Gagal memperbarui status laporan ke sistem.", "error");
+    }
   };
 
   const scrollToReportsSection = () => {

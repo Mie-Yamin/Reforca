@@ -75,7 +75,7 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
     setNewCommentText('');
   };
 
-  // Status Matte: Hijau Lembut (#16A34A) untuk 'Tuntas' dan Amber Lembut (#D97706) untuk 'Masa Perbaikan'
+  // Status Matte: Hijau Lembut (#16A34A) untuk 'Tuntas', Biru (#0284C7) untuk 'Sedang Dikerjakan', dan Amber (#D97706) untuk 'Menunggu Antrean'
   const getNormalizedStatus = (report) => {
     if (report.status === 'Completed' || report.citizenConfirmed) {
       return {
@@ -87,8 +87,18 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
         dotColor: 'bg-[#16A34A]'
       };
     }
+    if (report.status === 'In Progress') {
+      return {
+        label: 'Sedang Dikerjakan',
+        type: 'perbaikan',
+        bgColor: 'bg-[#E0F2FE]',
+        textColor: 'text-[#0284C7]',
+        borderColor: 'border-[#BAE6FD]',
+        dotColor: 'bg-[#0284C7]'
+      };
+    }
     return {
-      label: 'Masa Perbaikan',
+      label: 'Menunggu Antrean',
       type: 'perbaikan',
       bgColor: 'bg-[#FEF3C7]',
       textColor: 'text-[#D97706]',
