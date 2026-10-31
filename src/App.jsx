@@ -121,6 +121,12 @@ export default function App() {
   };
 
   const handleNavigate = (route) => {
+    // Jika meninggalkan halaman admin menuju halaman utama, hapus sesi admin demi keamanan
+    if (route === '/' && currentRoute === '/admin') {
+      logoutAdmin();
+      setAdminUser(null);
+    }
+
     setCurrentRoute(route);
     window.history.pushState({}, '', route);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -162,7 +168,8 @@ export default function App() {
   const handleAdminLogout = async () => {
     await logoutAdmin();
     setAdminUser(null);
-    showToast('Sesi administrator telah berakhir.', 'info');
+    showToast('Sesi administrator telah berakhir dan diamankan.', 'info');
+    handleNavigate('/admin');
   };
 
   const handleAddReport = async (newReport) => {
