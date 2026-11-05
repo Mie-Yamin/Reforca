@@ -227,13 +227,13 @@ export default function App() {
   };
 
   // ==========================================
-  // ISOLASI TAMPILAN JIKA BERADA DI RUTE /admin
+  // ISOLASI TAMPILAN JIKA BERADA DI RUTE /admin (TEMA TERANG BERSIH)
   // ==========================================
   if (currentRoute === '/admin') {
     return (
-      <div className="min-h-screen bg-[#0F172A] text-white flex flex-col justify-between font-sans selection:bg-cyan-500 selection:text-slate-950">
+      <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col justify-between font-sans selection:bg-blue-100 selection:text-blue-900">
         {!adminUser ? (
-          // Jika belum login admin, tampilkan form login khusus (tanpa navbar warga)
+          // Jika belum login admin, tampilkan form login khusus dengan latar belakang cerah
           <main className="flex-1 w-full flex flex-col justify-center">
             <AdminLogin
               onLoginSuccess={handleAdminLoginSuccess}
@@ -241,40 +241,41 @@ export default function App() {
             />
           </main>
         ) : (
-          // Jika sudah login admin, tampilkan Ruang Komando eksklusif
+          // Jika sudah login admin, tampilkan Ruang Komando bernuansa terang bersih ala portal user
           <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-700 gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E2E8F0] gap-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider">
+                  <span className="text-xs font-bold text-blue-600 uppercase tracking-wider bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
                     Portal Internal Kedinasan
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-semibold">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-semibold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span>Terautentikasi</span>
                   </span>
                 </div>
-                <h1 className="text-2xl font-black text-white mt-1">
+                <h1 className="text-2xl font-black text-[#0F172A] mt-1">
                   Ruang Komando Instansi: Dinas Lingkungan Hidup
                 </h1>
               </div>
 
               <div className="flex items-center gap-2.5 flex-wrap">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 text-xs">
-                  <div className="w-6 h-6 rounded-full bg-cyan-600 text-white flex items-center justify-center font-bold text-[10px]">
+                <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
+                  <div className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
                     DLH
                   </div>
                   <div className="text-left hidden md:block">
-                    <span className="block text-white font-bold text-[11px] leading-tight">
+                    <span className="block text-[#0F172A] font-bold text-xs leading-tight">
                       {adminUser.email}
                     </span>
-                    <span className="text-[10px] text-cyan-400 block leading-tight">
+                    <span className="text-[10px] text-blue-600 font-medium block leading-tight">
                       Administrator Resmi
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={handleAdminLogout}
-                    className="p-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors ml-1"
+                    className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1 font-semibold text-xs"
                     title="Keluar dari sesi Admin"
                   >
                     Keluar
@@ -284,7 +285,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => handleNavigate('/')}
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs"
+                  className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm"
                 >
                   &larr; Halaman Utama
                 </button>
@@ -298,8 +299,8 @@ export default function App() {
           </main>
         )}
 
-        {/* Footer minimalis khusus area admin */}
-        <footer className="py-6 text-center text-xs text-slate-500 border-t border-slate-800/80">
+        {/* Footer minimalis terang khusus area admin */}
+        <footer className="py-6 text-center text-xs text-slate-500 border-t border-[#E2E8F0] bg-white">
           Reforca Command Center &copy; 2026 &bull; Dinas Lingkungan Hidup
         </footer>
       </div>

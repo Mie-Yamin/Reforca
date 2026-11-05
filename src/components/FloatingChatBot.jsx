@@ -6,7 +6,7 @@ export default function FloatingChatBot({ reports = [] }) {
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: 'Halo! Saya Asisten Virtual Reforca 🌊. Tanyakan apa saja tentang laporan sampah pesisir, lokasi kotor, atau cara pelaporan.'
+      text: 'Halo! Saya Asisten Virtual Reforca 🌊. Tanyakan apa saja tentang laporan sampah pesisir, lokasi kotor, atau status pembersihan.'
     }
   ]);
   const [inputValue, setInputValue] = useState('');
@@ -47,25 +47,29 @@ export default function FloatingChatBot({ reports = [] }) {
       const lower = userText.toLowerCase();
       const activeReports = reports && reports.length > 0 ? reports : defaultReports;
 
-      // 1. Jika bertanya PENYEBAB / ALASAN (kenapa/mengapa)
-      if (lower.includes('kenapa') || lower.includes('mengapa') || lower.includes('sebab') || lower.includes('alasan')) {
-        botReply = "Penyebab utama pencemaran dan sampah di pesisir pantai meliputi:\n\n" +
-          "1. Buangan Sampah Domestik: Sampah plastik rumah tangga yang terbawa arus sungai menuju laut.\n" +
-          "2. Aktivitas Pesisir & Nelayan: Sisa jaring, styrofoam, dan pembuangan limbah secara langsung.\n" +
-          "3. Arus Laut & Musim Angin: Arus pasang surut yang membawa kiriman sampah dari perairan lain ke bibir pantai.";
+      // 1. Tanya KEADAAN / KONDISI / STATUS UMUM
+      if (lower.includes('keadaan') || lower.includes('kondisi') || lower.includes('situasi') || lower.includes('sekarang')) {
+        const daruratCount = activeReports.filter(r => (r.severity || '').toLowerCase() === 'darurat').length;
+        botReply = `Berdasarkan pemantauan sistem terkini, terdapat beberapa wilayah pesisir yang memerlukan perhatian khusus.\n\n` +
+          `- Total Laporan Aktif: ${activeReports.length} titik\n` +
+          `- Status Urgensi Darurat: ${daruratCount} titik\n\n` +
+          `Titik prioritas utama saat ini berada di ${activeReports[0]?.locationName || 'Wilayah Pesisir Utara'} dengan status penanganan: ${activeReports[0]?.status || 'Pending'}.`;
       }
-      // 2. Jika bertanya LOKASI / DAFTAR PANTAI (mana/lokasi/daftar)
+      // 2. Tanya PENYEBAB / ALASAN (kenapa)
+      else if (lower.includes('kenapa') || lower.includes('mengapa') || lower.includes('sebab')) {
+        botReply = "Penyebab utama pencemaran sampah di pesisir pantai meliputi:\n\n" +
+          "1. Buangan Sampah Domestik: Plastik rumah tangga yang terbawa arus sungai.\n" +
+          "2. Aktivitas Pesisir: Sisa jaring nelayan dan limbah rumah tangga liar.\n" +
+          "3. Arus Pasang Surut: Kiriman sampah dari laut lepas ke bibir pantai.";
+      }
+      // 3. Tanya DAFTAR LOKASI / MANA SAJA (mana/lokasi/daftar/titik)
       else if (lower.includes('mana') || lower.includes('lokasi') || lower.includes('daftar') || lower.includes('titik')) {
         const topReports = activeReports.slice(0, 3);
         const reportListText = topReports
           .map((r, idx) => `${idx + 1}. ${r.locationName}\n   Status: ${r.status || 'Pending'} | Urgensi: ${r.severity || 'Normal'} | Dukungan: ${r.votesCount || 0} suara`)
           .join('\n\n');
 
-        botReply = `Berikut titik laporan sampah pesisir aktif di sistem:\n\n${reportListText}\n\nDetail selengkapnya dapat dilihat pada Peta Interaktif di beranda.`;
-      }
-      // 3. Jika hanya menyebut kata pantai / kotor tanpa kata tanya khusus
-      else if (lower.includes('kotor') || lower.includes('pantai') || lower.includes('sampah')) {
-        botReply = "Apakah Anda ingin mengetahui lokasi pantai yang kotor atau ingin melaporkan timbulan sampah pesisir baru?";
+        botReply = `Berikut titik laporan sampah pesisir aktif di sistem:\n\n${reportListText}`;
       }
       // 4. Cara melapor
       else if (lower.includes('lapor') || lower.includes('cara') || lower.includes('buat')) {
@@ -120,10 +124,9 @@ export default function FloatingChatBot({ reports = [] }) {
                   }`}>
                   {msg.sender === 'user' ? <User size={12} /> : <Bot size={12} />}
                 </div>
-                {/* Tambahkan whitespace-pre-line agar baris baru (\n) terbaca dengan rapi */}
                 <div className={`p-3 rounded-2xl max-w-[75%] leading-relaxed whitespace-pre-line ${msg.sender === 'user'
-                  ? 'bg-blue-600 text-white rounded-tr-none'
-                  : 'bg-slate-900 text-slate-200 border border-slate-800 rounded-tl-none'
+                    ? 'bg-blue-600 text-white rounded-tr-none'
+                    : 'bg-slate-900 text-slate-200 border border-slate-800 rounded-tl-none'
                   }`}>
                   {msg.text}
                 </div>
