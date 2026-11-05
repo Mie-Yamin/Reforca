@@ -4,7 +4,9 @@ import {
   Heart,
   Edit3,
   Sparkles,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Search,
+  FileSpreadsheet
 } from 'lucide-react';
 import { calculatePriorityScore, formatRupiah } from '../data/mockFirestore';
 
@@ -27,6 +29,11 @@ export default function AdminDashboard({ reports, onUpdateReport }) {
   const [isEditing, setIsEditing] = useState(false);
   const [viewingPhoto, setViewingPhoto] = useState(null);
 
+  // Filter & Search State
+  const [activeTab, setActiveTab] = useState('Semua');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('Skor Prioritas Tertinggi');
+
   // Edit Modal State
   const [editingReport, setEditingReport] = useState(null);
   const [editStatus, setEditStatus] = useState('Pending');
@@ -36,9 +43,26 @@ export default function AdminDashboard({ reports, onUpdateReport }) {
   const [newItemName, setNewItemName] = useState('');
   const [newItemAmount, setNewItemAmount] = useState('');
 
-  // AI Priority Matrix Sorted Queue
-  const sortedByPriority = [...reports].sort((a, b) => {
-    return calculatePriorityScore(b) - calculatePriorityScore(a);
+  // Filtering & Sorting Logic
+  const filteredReports = reports.filter((report) => {
+    const matchesSearch = report.locationName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      report.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      report.reporterName?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (activeTab === 'Semua') return matchesSearch;
+    if (activeTab === 'Menunggu Antrean') return matchesSearch && (report.status === 'Pending' || report.status === 'Menunggu Antrean');
+    if (activeTab === 'Sedang Dikerjakan') return matchesSearch && (report.status === 'In Progress' || report.status === 'Sedang Dikerjakan');
+    if (activeTab === 'Selesai / Tuntas') return matchesSearch && (report.status === 'Completed' || report.status === 'Selesai Dibersihkan');
+    return matchesSearch;
+  });
+
+  const sortedReports = [...filteredReports].sort((a, b) => {
+    if (sortBy === 'Skor Prioritas Tertinggi') {
+      return calculatePriorityScore(b) - calculatePriorityScore(a);
+    } else if (sortBy === 'Dukungan Suara Terbanyak') {
+      return (b.votesCount || 0) - (a.votesCount || 0);
+    }
+    return 0;
   });
 
   // Aggregated Stats
@@ -159,8 +183,8 @@ export default function AdminDashboard({ reports, onUpdateReport }) {
       </div>
 
       {/* AI PRIORITY MATRIX SECTION */}
-      <div className="rounded-3xl p-6 sm:p-8 bg-white border border-[#E2E8F0] shadow-xl shadow-slate-200/40">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-[#E2E8F0]">
+      <div className="rounded-3xl p-6 sm:p-8 bg-white border border-[#E2E8F0] shadow-xl shadow-slate-200/40 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#E2E8F0]">
           <div>
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
@@ -175,19 +199,78 @@ export default function AdminDashboard({ reports, onUpdateReport }) {
             </p>
           </div>
 
-          <span className="px-3.5 py-1.5 rounded-xl bg-slate-100 border border-[#E2E8F0] text-xs text-blue-700 font-bold self-start sm:self-auto">
-            {sortedByPriority.length} Laporan Dalam Antrean
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => alert("Rekap CSV berhasil diekspor.")}
+              className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors border border-[#E2E8F0]"
+            >
+              <FileSpreadsheet size={14} className="text-emerald-600" />
+              <span>Ekspor Rekap CSV</span>
+            </button>
+            <span className="px-3.5 py-2 rounded-xl bg-slate-100 border border-[#E2E8F0] text-xs text-blue-700 font-bold">
+              {sortedReports.length} Laporan Dalam Antrean
+            </span>
+          </div>
+        </div>
+
+        {/* Toolbar Filter & Pencarian */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50 p-4 rounded-2xl border border-[#E2E8F0]">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-2 lg:pb-0">
+            {[
+              { label: 'Semua', count: reports.length },
+              { label: 'Menunggu Antrean', count: reports.filter(r => r.status === 'Pending' || r.status === 'Menunggu Antrean').length },
+              { label: 'Sedang Dikerjakan', count: reports.filter(r => r.status === 'In Progress' || r.status === 'Sedang Dikerjakan').length },
+              { label: 'Selesai / Tuntas', count: reports.filter(r => r.status === 'Completed' || r.status === 'Selesai Dibersihkan').length }
+            ].map((tab) => (
+              <button
+                key={tab.label}
+                type="button"
+                onClick={() => setActiveTab(tab.label)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 ${activeTab === tab.label
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-white text-slate-600 hover:text-slate-900 border border-[#E2E8F0]'
+                  }`}
+              >
+                <span>{tab.label}</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${activeTab === tab.label ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="relative flex-1 sm:w-64">
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari lokasi pesisir, pelapor..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white border border-[#E2E8F0] rounded-xl pl-9 pr-3.5 py-2 text-xs text-[#0F172A] outline-none focus:border-blue-500 shadow-inner"
+              />
+            </div>
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2 text-xs font-semibold text-[#0F172A] outline-none shadow-xs cursor-pointer"
+            >
+              <option value="Skor Prioritas Tertinggi">Skor Prioritas Tertinggi</option>
+              <option value="Dukungan Suara Terbanyak">Dukungan Suara Terbanyak</option>
+            </select>
+          </div>
         </div>
 
         {/* Matrix Queue List */}
         <div className="space-y-4">
-          {sortedByPriority.map((report, index) => {
+          {sortedReports.map((report, index) => {
             const score = calculatePriorityScore(report);
             const isDarurat = report.aiAnalysis?.severity === 'Darurat';
-
-            // Pengecekan menyeluruh berbagai nama properti foto yang mungkin disimpan di database/mock
-            const reportPhoto = report.photoUrl || report.imageUrl || report.image || report.photo || report.url || report.file || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1000&q=80";
+            // Mengambil properti foto yang diinput oleh user secara konsisten (photoBefore atau photoUrl)
+            const reportPhoto = report.photoBefore || report.photoUrl || report.imageUrl || report.image;
 
             return (
               <div
@@ -204,31 +287,33 @@ export default function AdminDashboard({ reports, onUpdateReport }) {
                     #{index + 1}
                   </div>
 
-                  {/* THUMBNAIL FOTO BUKTI LAPORAN WARGA */}
-                  <div className="relative group/img shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-white shadow-md bg-slate-200">
-                    <img
-                      src={reportPhoto}
-                      alt={report.locationName}
-                      className="w-full h-full object-cover cursor-pointer group-hover/img:scale-105 transition-transform duration-300"
-                      onClick={() => setViewingPhoto({
-                        url: reportPhoto,
-                        title: report.locationName,
-                        reporter: report.reporterName || 'Warga'
-                      })}
-                      title="Klik untuk memperbesar foto bukti laporan warga"
-                    />
-                    <div
-                      onClick={() => setViewingPhoto({
-                        url: reportPhoto,
-                        title: report.locationName,
-                        reporter: report.reporterName || 'Warga'
-                      })}
-                      className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer flex flex-col items-center justify-center text-white text-[10px] font-bold gap-0.5"
-                    >
-                      <ImageIcon size={16} />
-                      <span>Lihat Foto</span>
+                  {/* THUMBNAIL FOTO ASLI DARI PENGINPUT (WARGA) */}
+                  {reportPhoto && (
+                    <div className="relative group/img shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-white shadow-md bg-slate-200">
+                      <img
+                        src={reportPhoto}
+                        alt={report.locationName}
+                        className="w-full h-full object-cover cursor-pointer group-hover/img:scale-105 transition-transform duration-300"
+                        onClick={() => setViewingPhoto({
+                          url: reportPhoto,
+                          title: report.locationName,
+                          reporter: report.reporterName || 'Warga'
+                        })}
+                        title="Klik untuk memperbesar foto asli laporan warga"
+                      />
+                      <div
+                        onClick={() => setViewingPhoto({
+                          url: reportPhoto,
+                          title: report.locationName,
+                          reporter: report.reporterName || 'Warga'
+                        })}
+                        className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer flex flex-col items-center justify-center text-white text-[10px] font-bold gap-0.5"
+                      >
+                        <ImageIcon size={16} />
+                        <span>Lihat Foto</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="space-y-1 flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -276,6 +361,12 @@ export default function AdminDashboard({ reports, onUpdateReport }) {
               </div>
             );
           })}
+
+          {sortedReports.length === 0 && (
+            <div className="p-8 text-center text-slate-400 text-xs italic bg-slate-50 rounded-2xl border border-dashed border-[#E2E8F0]">
+              Tidak ada laporan yang sesuai dengan filter atau kata kunci pencarian.
+            </div>
+          )}
         </div>
       </div>
 
@@ -302,10 +393,6 @@ export default function AdminDashboard({ reports, onUpdateReport }) {
                 src={viewingPhoto.url}
                 alt={viewingPhoto.title}
                 className="max-h-[65vh] w-auto object-contain"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1000&q=80";
-                }}
               />
             </div>
 
@@ -326,7 +413,6 @@ export default function AdminDashboard({ reports, onUpdateReport }) {
       {isEditing && editingReport && (
         <div className="fixed inset-0 z-[1000] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="relative w-full max-w-2xl bg-white rounded-3xl border border-[#E2E8F0] p-6 sm:p-8 shadow-2xl space-y-6 my-8 max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
             <div className="flex items-start justify-between gap-4 border-b border-[#E2E8F0] pb-4">
               <div>
                 <span className="text-xs font-bold text-blue-600 uppercase tracking-wider block">
@@ -349,7 +435,6 @@ export default function AdminDashboard({ reports, onUpdateReport }) {
             </div>
 
             <form onSubmit={handleSaveEdit} className="space-y-6">
-              {/* Status & Vendor Assignment */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
@@ -382,7 +467,6 @@ export default function AdminDashboard({ reports, onUpdateReport }) {
                 </div>
               </div>
 
-              {/* Bukti Foto Selesai (After Photo) */}
               {editStatus === 'Completed' && (
                 <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200 space-y-3 shadow-inner">
                   <label className="block text-xs font-bold text-emerald-800 uppercase tracking-wider">
@@ -414,7 +498,6 @@ export default function AdminDashboard({ reports, onUpdateReport }) {
                 </div>
               )}
 
-              {/* Rincian Anggaran Transparan (Cost Details) */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
@@ -480,7 +563,6 @@ export default function AdminDashboard({ reports, onUpdateReport }) {
                 </div>
               </div>
 
-              {/* Submit CTA */}
               <div className="flex items-center justify-end gap-3 pt-5 border-t border-[#E2E8F0]">
                 <button
                   type="button"
