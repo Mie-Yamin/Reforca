@@ -56,13 +56,27 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
     e.preventDefault();
     if (!selectedReport || !newCommentText.trim() || isSubmittingComment) return;
 
+    const textToSend = newCommentText.trim();
+    setNewCommentText(''); // Kosongkan input seketika agar UI responsif
+
+    const newEntry = {
+      id: `c_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
+      text: textToSend,
+      createdAt: new Date().toISOString()
+    };
+
+    // Update state lokal secara instan agar langsung tampil di modal tanpa menunggu jeda jaringan
+    const updatedComments = [...(selectedReport.comments || []), newEntry];
+    setSelectedReport(prev => ({
+      ...prev,
+      comments: updatedComments
+    }));
+
     try {
       setIsSubmittingComment(true);
-      await addCommentToReport(selectedReport.id, newCommentText.trim());
-      setNewCommentText('');
+      await addCommentToReport(selectedReport.id, textToSend);
     } catch (err) {
-      console.error("Gagal mengirim komentar:", err);
-      alert("Gagal mengirim komentar. Periksa koneksi internet Anda.");
+      console.warn("Gagal sinkron ke Firestore, komentar tetap tersimpan di lokal:", err);
     } finally {
       setIsSubmittingComment(false);
     }
@@ -132,8 +146,8 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
               type="button"
               onClick={() => setFilterStatus('ALL')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${filterStatus === 'ALL'
-                  ? 'bg-[#1D4ED8] text-white shadow-xs'
-                  : 'text-[#64748B] hover:text-[#0F172A]'
+                ? 'bg-[#1D4ED8] text-white shadow-xs'
+                : 'text-[#64748B] hover:text-[#0F172A]'
                 }`}
             >
               Semua ({reports.length})
@@ -142,8 +156,8 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
               type="button"
               onClick={() => setFilterStatus('TUNTAS')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${filterStatus === 'TUNTAS'
-                  ? 'bg-[#16A34A] text-white shadow-xs'
-                  : 'text-[#64748B] hover:text-[#16A34A]'
+                ? 'bg-[#16A34A] text-white shadow-xs'
+                : 'text-[#64748B] hover:text-[#16A34A]'
                 }`}
             >
               <span className={`w-2 h-2 rounded-full ${filterStatus === 'TUNTAS' ? 'bg-white' : 'bg-[#16A34A]'}`}></span>
@@ -153,8 +167,8 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
               type="button"
               onClick={() => setFilterStatus('PERBAIKAN')}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${filterStatus === 'PERBAIKAN'
-                  ? 'bg-[#D97706] text-white shadow-xs'
-                  : 'text-[#64748B] hover:text-[#D97706]'
+                ? 'bg-[#D97706] text-white shadow-xs'
+                : 'text-[#64748B] hover:text-[#D97706]'
                 }`}
             >
               <span className={`w-2 h-2 rounded-full ${filterStatus === 'PERBAIKAN' ? 'bg-white' : 'bg-[#D97706]'}`}></span>
@@ -226,8 +240,8 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
                         type="button"
                         onClick={(e) => handleVote(e, report.id)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${isVoted
-                            ? 'bg-[#1D4ED8] text-white shadow-xs'
-                            : 'bg-[#F8FAFC] text-[#334155] hover:bg-[#F1F5F9] border border-[#E2E8F0]'
+                          ? 'bg-[#1D4ED8] text-white shadow-xs'
+                          : 'bg-[#F8FAFC] text-[#334155] hover:bg-[#F1F5F9] border border-[#E2E8F0]'
                           }`}
                       >
                         <ThumbsUp size={13} className={isVoted ? 'fill-current' : ''} />
@@ -311,8 +325,8 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
                         type="button"
                         onClick={() => setActivePhotoTab('before')}
                         className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${activePhotoTab === 'before'
-                            ? 'bg-white text-[#1D4ED8] shadow-xs border border-[#CBD5E1]'
-                            : 'text-[#64748B] hover:text-[#0F172A]'
+                          ? 'bg-white text-[#1D4ED8] shadow-xs border border-[#CBD5E1]'
+                          : 'text-[#64748B] hover:text-[#0F172A]'
                           }`}
                       >
                         Foto Sebelum (Before)
@@ -321,8 +335,8 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
                         type="button"
                         onClick={() => setActivePhotoTab('after')}
                         className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${activePhotoTab === 'after'
-                            ? 'bg-white text-[#16A34A] shadow-xs border border-[#BBF7D0]'
-                            : 'text-[#64748B] hover:text-[#16A34A]'
+                          ? 'bg-white text-[#16A34A] shadow-xs border border-[#BBF7D0]'
+                          : 'text-[#64748B] hover:text-[#16A34A]'
                           }`}
                       >
                         Foto Sesudah (After)
