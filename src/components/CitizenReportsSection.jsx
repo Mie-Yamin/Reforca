@@ -11,46 +11,26 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { formatRelativeDate, formatRupiah } from '../data/mockFirestore';
+import { addCommentToReport } from '../services/reportService';
 
 export default function CitizenReportsSection({ reports, onUpvote }) {
   const [selectedReport, setSelectedReport] = useState(null);
   const [filterStatus, setFilterStatus] = useState('ALL'); // 'ALL' | 'TUNTAS' | 'PERBAIKAN'
   const [activePhotoTab, setActivePhotoTab] = useState('before'); // 'before' | 'after'
 
-  // State Komentar dengan sinkronisasi localStorage agar tidak hilang saat di-refresh
-  const [commentsState, setCommentsState] = useState(() => {
-    try {
-      const saved = localStorage.getItem('reforca_citizen_comments');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error("Gagal memuat komentar dari localStorage", e);
-    }
-    return {
-      reforca_doc_001: [
-        { id: 'c1', text: 'Semoga segera tuntas. Nelayan muara sangat membutuhkan akses alur perahu yang bersih.', time: '2 hari lalu' },
-        { id: 'c2', text: 'Salut untuk tim relawan yang terjun langsung ke sela mangrove!', time: '1 hari lalu' }
-      ],
-      reforca_doc_003: [
-        { id: 'c3', text: 'Pantai Pasir Perawan sudah sangat bersih sekarang, terima kasih respon cepatnya!', time: '3 hari lalu' },
-        { id: 'c4', text: 'Sebelum dan sesudahnya sangat kontras. Mari jaga bersama jangan buang sampah lagi.', time: '2 hari lalu' }
-      ],
-      reforca_doc_004: [
-        { id: 'c5', text: 'Bebatuan pemecah ombak memang sering jadi perangkap sachet. Perlu tempat sampah lebih banyak di dekat dermaga.', time: '3 hari lalu' }
-      ]
-    };
-  });
-
   const [newCommentText, setNewCommentText] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [votedReports, setVotedReports] = useState({});
 
-  // Simpan komentar ke localStorage setiap kali ada perubahan
+  // Sinkronisasi data selectedReport secara real-time ketika props reports berubah dari Firebase
   useEffect(() => {
-    try {
-      localStorage.setItem('reforca_citizen_comments', JSON.stringify(commentsState));
-    } catch (e) {
-      console.error("Gagal menyimpan komentar ke localStorage", e);
+    if (selectedReport) {
+      const latestReport = reports.find(r => r.id === selectedReport.id);
+      if (latestReport) {
+        setSelectedReport(latestReport);
+      }
     }
-  }, [commentsState]);
+  }, [reports]);
 
   // Close modal on Escape key
   useEffect(() => {
@@ -72,22 +52,20 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
     }
   };
 
-  const handleAddComment = (e) => {
+  const handleAddComment = async (e) => {
     e.preventDefault();
-    if (!selectedReport || !newCommentText.trim()) return;
+    if (!selectedReport || !newCommentText.trim() || isSubmittingComment) return;
 
-    const newEntry = {
-      id: `c_${Date.now()}`,
-      text: newCommentText.trim(),
-      time: 'Baru saja'
-    };
-
-    setCommentsState((prev) => ({
-      ...prev,
-      [selectedReport.id]: [...(prev[selectedReport.id] || []), newEntry]
-    }));
-
-    setNewCommentText('');
+    try {
+      setIsSubmittingComment(true);
+      await addCommentToReport(selectedReport.id, newCommentText.trim());
+      setNewCommentText('');
+    } catch (err) {
+      console.error("Gagal mengirim komentar:", err);
+      alert("Gagal mengirim komentar. Periksa koneksi internet Anda.");
+    } finally {
+      setIsSubmittingComment(false);
+    }
   };
 
   const getNormalizedStatus = (report) => {
@@ -149,7 +127,6 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
             </p>
           </div>
 
-          {/* Filter Status Buttons Matte Light */}
           <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white border border-[#E2E8F0] shadow-sm">
             <button
               type="button"
@@ -186,11 +163,11 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
           </div>
         </div>
 
-        {/* News Card Grid Layout */}
+        {/* Card Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8" data-aos="fade-up" data-aos-delay="100">
           {filteredReports.map((report) => {
             const status = getNormalizedStatus(report);
-            const commentsCount = (commentsState[report.id] || []).length;
+            const commentsCount = (report.comments || []).length;
             const isVoted = !!votedReports[report.id];
             const displayVotes = (report.votesCount || 0) + (isVoted ? 1 : 0);
 
@@ -252,7 +229,6 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
                             ? 'bg-[#1D4ED8] text-white shadow-xs'
                             : 'bg-[#F8FAFC] text-[#334155] hover:bg-[#F1F5F9] border border-[#E2E8F0]'
                           }`}
-                        title="Dukung penanganan laporan ini"
                       >
                         <ThumbsUp size={13} className={isVoted ? 'fill-current' : ''} />
                         <span>{displayVotes}</span>
@@ -382,60 +358,7 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-[#EFF6FF] border border-[#DBEAFE] space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#1D4ED8]">
-                    <Sparkles size={14} />
-                    <span>Analisis AI Reforca</span>
-                  </div>
-                  <div className="text-xs text-[#0F172A]">
-                    Keparahan: <strong>{selectedReport.aiAnalysis?.severity}</strong> ({selectedReport.aiAnalysis?.confidenceScore}% akurasi)
-                  </div>
-                  <div className="text-xs text-[#64748B]">
-                    Estimasi Luasan: {selectedReport.aiAnalysis?.estimatedVolumeM2} m²
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#0F172A]">
-                    <Building2 size={14} className="text-[#1D4ED8]" />
-                    <span>Instansi Penanggung Jawab</span>
-                  </div>
-                  <div className="text-xs text-[#0F172A] font-semibold truncate">
-                    {selectedReport.assignedVendor || 'Sedang Ditugaskan ke DLH'}
-                  </div>
-                  <div className="text-xs text-[#64748B]">
-                    Alokasi: {selectedReport.costDetails?.totalCost > 0 ? formatRupiah(selectedReport.costDetails.totalCost) : 'Tahap Verifikasi Anggaran'}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-4 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                <div>
-                  <span className="text-sm font-bold text-[#0F172A] block">
-                    Dukung Prioritas Penanganan
-                  </span>
-                  <span className="text-xs text-[#64748B]">
-                    Semakin banyak dukungan, semakin cepat instansi menindaklanjuti.
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={(e) => handleVote(e, selectedReport.id)}
-                  className={`px-5 py-2.5 rounded-full font-bold text-xs sm:text-sm flex items-center gap-2 transition-all ${votedReports[selectedReport.id]
-                      ? 'bg-[#1D4ED8] text-white shadow-xs'
-                      : 'bg-white border border-[#CBD5E1] text-[#334155] hover:bg-[#F8FAFC]'
-                    }`}
-                >
-                  <ThumbsUp size={15} className={votedReports[selectedReport.id] ? 'fill-current' : ''} />
-                  <span>
-                    {votedReports[selectedReport.id] ? 'Didukung' : 'Beri Vote'} ({(selectedReport.votesCount || 0) + (votedReports[selectedReport.id] ? 1 : 0)})
-                  </span>
-                </button>
-              </div>
-
-              {/* Kolom Komentar Diskusi Publik (Tanpa Nama/Anonim & Tersimpan di localStorage) */}
+              {/* Diskusi Publik (Komentar Langsung dari Firebase Firestore Tanpa Nama/Anonim) */}
               <div className="space-y-4 pt-4 border-t border-[#E2E8F0]">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
@@ -443,11 +366,10 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
                     <span>Diskusi Publik Warga</span>
                   </h4>
                   <span className="text-xs text-[#64748B]">
-                    {(commentsState[selectedReport.id] || []).length} komentar
+                    {(selectedReport.comments || []).length} komentar
                   </span>
                 </div>
 
-                {/* Form Kirim Komentar (Input nama dihapus, langsung isi pesan) */}
                 <form onSubmit={handleAddComment} className="space-y-2.5">
                   <div className="flex gap-2">
                     <input
@@ -460,25 +382,25 @@ export default function CitizenReportsSection({ reports, onUpvote }) {
                     />
                     <button
                       type="submit"
-                      className="px-5 py-2.5 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shrink-0 shadow-xs"
+                      disabled={isSubmittingComment}
+                      className="px-5 py-2.5 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shrink-0 shadow-xs disabled:opacity-50"
                     >
                       <Send size={13} />
-                      <span>Kirim</span>
+                      <span>{isSubmittingComment ? 'Mengirim...' : 'Kirim'}</span>
                     </button>
                   </div>
                 </form>
 
-                {/* Daftar Komentar Bersih Tanpa Label Nama Pengirim */}
                 <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                  {(commentsState[selectedReport.id] || []).length === 0 ? (
+                  {(!selectedReport.comments || selectedReport.comments.length === 0) ? (
                     <div className="text-xs text-[#64748B] text-center py-4 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
                       Belum ada komentar untuk laporan ini. Jadilah yang pertama memberikan tanggapan!
                     </div>
                   ) : (
-                    (commentsState[selectedReport.id] || []).map((comm) => (
+                    selectedReport.comments.map((comm) => (
                       <div key={comm.id} className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1">
                         <div className="flex items-center justify-end text-[11px] text-[#64748B]">
-                          <span>{comm.time}</span>
+                          <span>{comm.createdAt ? formatRelativeDate(comm.createdAt) : 'Baru saja'}</span>
                         </div>
                         <p className="text-xs text-[#334155] leading-relaxed">
                           {comm.text}

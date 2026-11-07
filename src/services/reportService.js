@@ -1,11 +1,12 @@
-import { 
-  collection, 
-  doc, 
-  onSnapshot, 
-  setDoc, 
-  updateDoc, 
+import {
+  collection,
+  doc,
+  onSnapshot,
+  setDoc,
+  updateDoc,
   deleteDoc,
-  increment 
+  increment,
+  arrayUnion
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { INITIAL_REPORTS } from '../data/mockFirestore';
@@ -28,7 +29,6 @@ export function getLocalReports() {
   } catch (err) {
     console.warn("Gagal membaca cache lokal laporan:", err);
   }
-  // Simpan data inisial ke localStorage agar selalu ada data acuan
   try {
     localStorage.setItem(LOCAL_STORAGE_REPORTS_KEY, JSON.stringify(INITIAL_REPORTS));
   } catch (_e) {
@@ -47,7 +47,6 @@ function saveLocalReports(reportsList) {
     console.warn("Gagal menyimpan ke localStorage:", err);
   }
 
-  // Notifikasi real-time di window saat ini & lintas komponen
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('reforca:reports_changed', { detail: reportsList }));
   }
@@ -55,14 +54,11 @@ function saveLocalReports(reportsList) {
 
 /**
  * Berlangganan data laporan secara realtime (Hybrid: Firestore + Local Cache)
- * Memastikan web user dan web admin selalu tersambung secara instan & real-time.
  */
 export function subscribeToReports(onData, onError) {
-  // 1. Tampilkan data dari cache lokal terlebih dahulu agar UI instan tanpa loading
   const initialLocal = getLocalReports();
   onData(initialLocal);
 
-  // 2. Berlangganan event lokal agar update dari tab/komponen langsung ter-render
   const handleLocalChange = (e) => {
     if (e.detail && Array.isArray(e.detail)) {
       onData(e.detail);
@@ -87,15 +83,13 @@ export function subscribeToReports(onData, onError) {
     window.addEventListener('storage', handleStorageEvent);
   }
 
-  // 3. Sinkronisasi dengan Google Cloud Firestore
-  let unsubscribeFirestore = () => {};
+  let unsubscribeFirestore = () => { };
   try {
     const reportsCol = collection(db, REPORTS_COLLECTION);
     unsubscribeFirestore = onSnapshot(
       reportsCol,
       async (snapshot) => {
         if (snapshot.empty) {
-          console.log("Koleksi Firestore kosong, seeding data awal...");
           try {
             await seedInitialReports();
           } catch (err) {
@@ -109,14 +103,10 @@ export function subscribeToReports(onData, onError) {
           ...docSnap.data()
         }));
 
-        // Gabungkan dengan laporan lokal yang mungkin baru dibuat
         const currentLocal = getLocalReports();
         const mergedMap = new Map();
 
-        // Masukkan data lokal terlebih dahulu
         currentLocal.forEach(r => mergedMap.set(r.id, r));
-
-        // Timpa / tambahkan dengan data Firestore yang masuk
         firestoreList.forEach(r => mergedMap.set(r.id, r));
 
         const mergedList = Array.from(mergedMap.values());
@@ -131,10 +121,9 @@ export function subscribeToReports(onData, onError) {
       }
     );
   } catch (err) {
-    console.warn("Inisialisasi Firestore listener gagal, menggunakan storage lokal:", err);
+    console.warn("Inisialisasi Firestore listener gagal:", err);
   }
 
-  // Cleanup subscription
   return () => {
     if (typeof window !== 'undefined') {
       window.removeEventListener('reforca:reports_changed', handleLocalChange);
@@ -144,27 +133,20 @@ export function subscribeToReports(onData, onError) {
   };
 }
 
-/**
- * Seeding data awal ke Firestore jika database kosong
- */
 export async function seedInitialReports() {
   for (const report of INITIAL_REPORTS) {
     try {
       const reportRef = doc(db, REPORTS_COLLECTION, report.id);
       await setDoc(reportRef, report, { merge: true });
     } catch (_err) {
-      // Abaikan jika Firestore permissions terbatas
+      // Ignore
     }
   }
 }
 
-/**
- * Membuat laporan baru oleh warga.
- * Otomatis tersambung dan masuk ke Admin Dashboard serta database.
- */
 export async function createReport(reportData) {
   const newId = reportData.id || `rep_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-  
+
   const newReport = {
     ...reportData,
     id: newId,
@@ -173,31 +155,25 @@ export async function createReport(reportData) {
     costDetails: reportData.costDetails || { totalCost: 0, breakdown: [] },
     votesCount: reportData.votesCount || 1,
     citizenConfirmed: reportData.citizenConfirmed || false,
+    comments: reportData.comments || [],
     createdAt: reportData.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
 
-  // 1. Simpan segera ke cache lokal agar langsung muncul di web admin & web user
   const currentReports = getLocalReports();
   const updatedList = [newReport, ...currentReports.filter(r => r.id !== newId)];
   saveLocalReports(updatedList);
 
-  // 2. Kirim ke Cloud Firestore
   try {
     const reportRef = doc(db, REPORTS_COLLECTION, newId);
     await setDoc(reportRef, newReport, { merge: true });
   } catch (err) {
-    console.warn("Gagal sinkron ke Cloud Firestore (tetap tersimpan di cache lokal):", err);
+    console.warn("Gagal sinkron ke Cloud Firestore:", err);
   }
 
   return newReport;
 }
 
-/**
- * Update penanganan laporan oleh Instansi/Admin (Ruang Komando).
- * Mengubah status (Pending -> In Progress -> Completed), vendor, foto after, dan rincian biaya
- * yang langsung dikirim dan ditampilkan di web user.
- */
 export async function updateReportStatus(reportId, updates) {
   if (!reportId) return null;
 
@@ -215,7 +191,6 @@ export async function updateReportStatus(reportId, updates) {
     saveLocalReports([...currentReports]);
   }
 
-  // Sinkronisasi ke Cloud Firestore
   try {
     const reportRef = doc(db, REPORTS_COLLECTION, reportId);
     await setDoc(reportRef, {
@@ -223,23 +198,20 @@ export async function updateReportStatus(reportId, updates) {
       updatedAt: new Date().toISOString()
     }, { merge: true });
   } catch (err) {
-    console.warn("Gagal update ke Firestore (tetap tersimpan di cache lokal):", err);
+    console.warn("Gagal update ke Firestore:", err);
   }
 
   return updatedReport;
 }
 
-/**
- * Memberikan dukungan / upvote warga pada sebuah laporan
- */
 export async function upvoteReport(reportId, newVotesCount) {
   if (!reportId) return;
 
   const currentReports = getLocalReports();
   const targetIndex = currentReports.findIndex(r => r.id === reportId);
   if (targetIndex !== -1) {
-    const calculatedVotes = typeof newVotesCount === 'number' 
-      ? newVotesCount 
+    const calculatedVotes = typeof newVotesCount === 'number'
+      ? newVotesCount
       : (currentReports[targetIndex].votesCount || 0) + 1;
 
     currentReports[targetIndex] = {
@@ -264,13 +236,10 @@ export async function upvoteReport(reportId, newVotesCount) {
       });
     }
   } catch (err) {
-    console.warn("Upvote Firestore sync fallback:", err);
+    console.warn("Upvote sync fallback:", err);
   }
 }
 
-/**
- * Konfirmasi pembersihan oleh warga (Citizen Verification)
- */
 export async function confirmCitizenCleanup(reportId) {
   if (!reportId) return;
 
@@ -296,9 +265,6 @@ export async function confirmCitizenCleanup(reportId) {
   }
 }
 
-/**
- * Hapus laporan oleh Admin
- */
 export async function deleteReport(reportId) {
   if (!reportId) return;
 
@@ -312,4 +278,42 @@ export async function deleteReport(reportId) {
   } catch (err) {
     console.warn("Delete report sync fallback:", err);
   }
+}
+
+/**
+ * Menambahkan komentar baru langsung ke dokumen laporan di Firebase Firestore
+ */
+export async function addCommentToReport(reportId, commentText) {
+  if (!reportId || !commentText.trim()) return null;
+
+  const newComment = {
+    id: `c_${Date.now()}_${Math.random().toString(36).substring(2, 5)}`,
+    text: commentText.trim(),
+    createdAt: new Date().toISOString()
+  };
+
+  // 1. Update cache lokal terlebih dahulu agar UI instan
+  const currentReports = getLocalReports();
+  const targetIndex = currentReports.findIndex(r => r.id === reportId);
+  if (targetIndex !== -1) {
+    const existingComments = currentReports[targetIndex].comments || [];
+    currentReports[targetIndex] = {
+      ...currentReports[targetIndex],
+      comments: [...existingComments, newComment]
+    };
+    saveLocalReports([...currentReports]);
+  }
+
+  // 2. Simpan secara cloud ke Firestore menggunakan arrayUnion
+  try {
+    const reportRef = doc(db, REPORTS_COLLECTION, reportId);
+    await updateDoc(reportRef, {
+      comments: arrayUnion(newComment),
+      updatedAt: new Date().toISOString()
+    });
+  } catch (err) {
+    console.warn("Gagal menyimpan komentar ke Cloud Firestore:", err);
+  }
+
+  return newComment;
 }
