@@ -1,34 +1,29 @@
 import React, { useState } from 'react';
-import { 
-  Heart, 
-  MapPin, 
-  Clock, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Search, 
-  ShieldCheck, 
-  ExternalLink, 
-  Filter, 
-  DollarSign, 
-  Briefcase, 
-  SlidersHorizontal,
-  ChevronDown,
-  Layers,
+import {
+  Heart,
+  MapPin,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  Search,
+  ShieldCheck,
+  DollarSign,
+  Briefcase,
   Sparkles,
   Award
 } from 'lucide-react';
 import { formatRupiah, formatRelativeDate } from '../data/mockFirestore';
 
-export default function PublicFeed({ 
-  reports, 
-  onUpvote, 
-  onCitizenVerify, 
-  onFocusMap 
+export default function PublicFeed({
+  reports,
+  onUpvote,
+  onCitizenVerify,
+  onFocusMap
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('ALL');
   const [votedMap, setVotedMap] = useState({});
-  const [activeImageTab, setActiveImageTab] = useState({}); // { [reportId]: 'before' | 'after' }
+  const [activeImageTab, setActiveImageTab] = useState({});
 
   const handleVoteClick = (reportId) => {
     const isAlreadyVoted = !!votedMap[reportId];
@@ -40,7 +35,6 @@ export default function PublicFeed({
     setActiveImageTab(prev => ({ ...prev, [reportId]: view }));
   };
 
-  // Filter reports
   const filteredReports = reports.filter(r => {
     const matchSearch = r.locationName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       r.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -57,9 +51,7 @@ export default function PublicFeed({
 
   return (
     <div className="space-y-6" data-aos="fade-up">
-      {/* Search and Tabs Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl glass-panel border border-teal-500/20">
-        {/* Tabs */}
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
           {[
             { id: 'ALL', label: 'Semua Laporan' },
@@ -71,18 +63,16 @@ export default function PublicFeed({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                activeTab === tab.id
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${activeTab === tab.id
                   ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-slate-950 shadow-md shadow-teal-500/20'
                   : 'bg-slate-900/60 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-              }`}
+                }`}
             >
               {tab.label}
             </button>
           ))}
         </div>
 
-        {/* Search Input */}
         <div className="relative min-w-[240px] md:max-w-xs">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -95,13 +85,11 @@ export default function PublicFeed({
         </div>
       </div>
 
-      {/* Reports Count Info */}
       <div className="flex items-center justify-between text-xs text-slate-400 px-2">
         <span>Menampilkan <strong className="text-teal-300">{filteredReports.length}</strong> titik laporan masyarakat</span>
         <span>Diurutkan berdasarkan waktu & aktivitas dukungan</span>
       </div>
 
-      {/* Grid of Report Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredReports.map((report) => {
           const isDarurat = report.aiAnalysis?.severity === 'Darurat';
@@ -111,73 +99,61 @@ export default function PublicFeed({
           const currentImageView = activeImageTab[report.id] || (report.photoAfter ? 'after' : 'before');
 
           return (
-            <div 
+            <div
               key={report.id}
               className="glass-card glass-card-hover rounded-2xl overflow-hidden flex flex-col justify-between border border-slate-800 hover:border-teal-500/40 transition-all duration-300"
             >
-              {/* Card Image Header with Before / After Tabs if Completed */}
               <div className="relative h-56 w-full bg-slate-900 overflow-hidden">
                 <img
                   src={currentImageView === 'after' && report.photoAfter ? report.photoAfter : report.photoBefore}
                   alt={report.locationName}
                   className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                 />
-
-                {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
 
-                {/* Top Badges */}
                 <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 pointer-events-none">
-                  {/* Severity Badge */}
-                  <span className={`pointer-events-auto text-[11px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-lg backdrop-blur ${
-                    isDarurat ? 'bg-rose-600/90 text-white shadow-glow-rose' :
-                    isTinggi ? 'bg-amber-500/90 text-slate-950 font-extrabold' :
-                    isSedang ? 'bg-cyan-500/90 text-slate-950 font-extrabold' :
-                    'bg-emerald-500/90 text-slate-950 font-extrabold'
-                  }`}>
+                  <span className={`pointer-events-auto text-[11px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-lg backdrop-blur ${isDarurat ? 'bg-rose-600/90 text-white shadow-glow-rose' :
+                      isTinggi ? 'bg-amber-500/90 text-slate-950 font-extrabold' :
+                        isSedang ? 'bg-cyan-500/90 text-slate-950 font-extrabold' :
+                          'bg-emerald-500/90 text-slate-950 font-extrabold'
+                    }`}>
                     <AlertTriangle size={12} />
                     <span>{report.aiAnalysis?.severity}</span>
                   </span>
 
-                  {/* Status Badge */}
-                  <span className={`pointer-events-auto text-[11px] font-bold px-3 py-1 rounded-full shadow-lg backdrop-blur flex items-center gap-1.5 ${
-                    report.status === 'Completed' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
-                    report.status === 'In Progress' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' :
-                    'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                  }`}>
+                  <span className={`pointer-events-auto text-[11px] font-bold px-3 py-1 rounded-full shadow-lg backdrop-blur flex items-center gap-1.5 ${report.status === 'Completed' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
+                      report.status === 'In Progress' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' :
+                        'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                    }`}>
                     {report.status === 'Completed' && <CheckCircle2 size={12} />}
                     {report.status === 'In Progress' && <Clock size={12} className="animate-spin-slow" />}
                     <span>{report.status}</span>
                   </span>
                 </div>
 
-                {/* Before / After toggle for completed reports */}
                 {report.photoAfter && (
                   <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1 bg-slate-950/80 backdrop-blur-md p-1 rounded-xl border border-slate-700">
                     <button
                       onClick={() => toggleImageTab(report.id, 'before')}
-                      className={`px-2 py-0.5 text-[10px] font-bold rounded-lg transition-all ${
-                        currentImageView === 'before'
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded-lg transition-all ${currentImageView === 'before'
                           ? 'bg-rose-500 text-white'
                           : 'text-slate-400 hover:text-white'
-                      }`}
+                        }`}
                     >
                       Kondisi Kotor (Before)
                     </button>
                     <button
                       onClick={() => toggleImageTab(report.id, 'after')}
-                      className={`px-2 py-0.5 text-[10px] font-bold rounded-lg transition-all ${
-                        currentImageView === 'after'
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded-lg transition-all ${currentImageView === 'after'
                           ? 'bg-emerald-500 text-slate-950'
                           : 'text-slate-400 hover:text-white'
-                      }`}
+                        }`}
                     >
                       Sudah Bersih (After) ✨
                     </button>
                   </div>
                 )}
 
-                {/* Map Quick jump button */}
                 <button
                   onClick={() => onFocusMap && onFocusMap(report.id)}
                   title="Lihat Titik di Peta Interaktif"
@@ -188,7 +164,6 @@ export default function PublicFeed({
                 </button>
               </div>
 
-              {/* Card Body */}
               <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-2 text-xs text-slate-400 mb-1.5">
@@ -205,7 +180,6 @@ export default function PublicFeed({
                     {report.description}
                   </p>
 
-                  {/* AI Analysis Tags */}
                   <div className="mt-3.5 pt-3 border-t border-slate-800/80 space-y-2">
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="text-slate-400 flex items-center gap-1">
@@ -224,7 +198,6 @@ export default function PublicFeed({
                     </div>
                   </div>
 
-                  {/* Vendor & Transparency Brief */}
                   {report.assignedVendor && report.assignedVendor !== 'Belum Ditugaskan' && (
                     <div className="mt-3 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-[11px] space-y-1">
                       <div className="flex items-center justify-between text-slate-400">
@@ -247,17 +220,13 @@ export default function PublicFeed({
                   )}
                 </div>
 
-                {/* Citizen Verification & Upvote Footer */}
                 <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                  
-                  {/* Upvote Button ("Dukung Laporan Ini") */}
                   <button
                     onClick={() => handleVoteClick(report.id)}
-                    className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                      isVoted
+                    className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${isVoted
                         ? 'bg-rose-500 text-white shadow-glow-rose scale-105'
                         : 'bg-slate-900 hover:bg-rose-500/20 text-slate-200 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40'
-                    }`}
+                      }`}
                   >
                     <Heart size={14} className={isVoted ? 'fill-current text-white' : 'text-rose-400'} />
                     <span>{isVoted ? 'Didukung' : 'Dukung Laporan Ini'}</span>
@@ -266,7 +235,6 @@ export default function PublicFeed({
                     </span>
                   </button>
 
-                  {/* Citizen Verification Action / Badge */}
                   {report.status === 'Completed' ? (
                     report.citizenConfirmed ? (
                       <div className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/70 text-emerald-300 border border-emerald-500/40 text-[11px] font-semibold">
@@ -287,10 +255,8 @@ export default function PublicFeed({
                       Verifikasi aktif setelah penanganan selesai
                     </span>
                   )}
-
                 </div>
               </div>
-
             </div>
           );
         })}
